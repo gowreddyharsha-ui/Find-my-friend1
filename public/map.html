@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find My Friend</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body, #map { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <div id="info-dialog" style="display: none; position: absolute; bottom: 20px; left: 20px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 220px;">
+    <h3 id="dialog-username" style="margin: 0 0 5px 0; font-size: 16px; color: #333;"></h3>
+    <p id="dialog-location" style="margin: 0 0 5px 0; font-size: 14px; color: #666;"></p>
+    <p id="dialog-floor" style="margin: 0; font-size: 14px; font-weight: bold; color: #007bff;"></p>
+</div>
+    <div id="search-container" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 5px;">
+        <input type="text" id="search-username" placeholder="Search friend's username..." />
+        <button id="search-btn">Search</button>
+        <ul id="search-results" style="list-style: none; padding: 0; margin-top: 5px;"></ul>
+    </div>
+    <div id="map"></div>
+    
+    <!-- Profile Button (Top Right) -->
+<div style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+    <button id="profile-btn" style="padding: 10px; border-radius: 5px; cursor: pointer; background: #007bff; color: white; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Profile</button>
+</div>
+
+<!-- Profile Modal (Hidden by default) -->
+<div id="profile-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 250px; text-align: center;">
+    <button onclick="document.getElementById('profile-modal').style.display='none'" style="float: right; border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
+    <h2 style="margin-top: 0;">My Profile</h2>
+    <p style="margin-bottom: 20px;"><strong>Username:</strong> <span id="profile-username-display"></span></p>
+
+    <!-- Menu Options -->
+    <button id="manage-account-btn" style="margin-bottom: 10px; width: 100%; padding: 10px; cursor: pointer; border: 1px solid #ccc; background: #f8f9fa; border-radius: 4px;">Manage Account</button>
+    
+    <button id="delete-account-btn" style="width: 100%; padding: 10px; cursor: pointer; border: none; background: #dc3545; color: white; border-radius: 4px;">Delete Account</button>
+</div>
+
+<!-- MANAGE ACCOUNT MODAL -->
+    <div id="manage-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2001; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 280px;">
+        <button onclick="document.getElementById('manage-modal').style.display='none'" style="float: right; border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
+        <h2 style="margin-top: 0;">Manage Account</h2>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 14px; margin-bottom: 5px;">Update Status:</label>
+            <input type="text" id="update-status" placeholder="E.g., In class, At the library..." style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 14px; margin-bottom: 5px;">New Password:</label>
+            <input type="password" id="update-password" placeholder="Enter new password" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <button id="save-account-btn" style="width: 100%; padding: 10px; cursor: pointer; border: none; background: #28a745; color: white; border-radius: 4px;">Save Changes</button>
+    </div>
+    <!-- END OF HTML -->
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <!-- Socket.io JS -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const currentUsername = localStorage.getItem('mapUsername');
+
+if (!currentUsername) {
+    window.location.href = 'login.html';
+} else {
+    console.log('Logged in as:', currentUsername);
+    
+    const userDisplay = document.getElementById('username-display');
+    if (userDisplay) {
+        userDisplay.innerText = currentUsername;
+    }
+}
+        // Retrieve the logged-in username from localStorage
+        const username = localStorage.getItem('mapUsername');
+
+    // If no user is logged in, redirect them back to the login page
+    if (!username) {
+        window.location.href = 'login.html';
+        
+    }
+        const socket = io();
+
+       if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(position => {
+        const { latitude, longitude, altitude } = position.coords;
+        
+        // Estimate floor (assuming ~3.5 meters per floor, with ground floor as 0)
+        let estimatedFloor = 'Ground Floor';
+        if (altitude !== null && altitude !== undefined) {
+            const baseAltitude = 0; 
+            const heightDiff = altitude - baseAltitude;
+            const floorNum = Math.floor(heightDiff / 3.5);
+            estimatedFloor = floorNum > 0 ? `Floor ${floorNum}` : 'Ground Floor';
+        }
+        // Updated event name here to 'update_location'
+        socket.emit('update_location', { 
+            username: currentUsername, 
+            latitude: latitude, 
+            longitude: longitude, 
+            floor: estimatedFloor,
+            building: 'Main Block' 
+        });
+    }, err => {
+        console.error('Geolocation error:', err);
+    }, { 
+        enableHighAccuracy: true, 
+        maximumAge: 0 
+    });
+}
+// Open Profile Modal
+document.getElementById('profile-btn').addEventListener('click', () => {
+    document.getElementById('profile-username-display').textContent = currentUsername;
+    document.getElementById('profile-modal').style.display = 'block';
+});
+
+// Manage Account Logic (Placeholder for now)
+document.getElementById('manage-account-btn').addEventListener('click', () => {
+    alert('Manage Account settings coming soon!');
+});
+
+// Delete Account Logic
+document.getElementById('delete-account-btn').addEventListener('click', async () => {
+    // 1. Ask for confirmation so the user doesn't delete by accident
+    const confirmDelete = confirm('Are you sure you want to delete your account? This action cannot be undone.');
+    
+    if (confirmDelete) {
+        try {
+            // 2. Send request to backend
+            const response = await fetch('/delete-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUsername })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Your account has been deleted successfully.');
+                // 3. Clear local storage and log them out
+                localStorage.removeItem('mapUsername');
+                window.location.href = 'login.html';
+            } else {
+                alert('Error deleting account. Please try again.');
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+        }
+    }
+});
+// Open Manage Account Modal from Profile Modal
+document.getElementById('manage-account-btn').addEventListener('click', () => {
+    document.getElementById('manage-modal').style.display = 'block';
+    document.getElementById('profile-modal').style.display = 'none';
+});
+
+// Save Account Changes (Status and Password)
+document.getElementById('save-account-btn').addEventListener('click', async () => {
+    const newStatus = document.getElementById('update-status').value.trim();
+    const newPassword = document.getElementById('update-password').value.trim();
+
+    if (!newStatus && !newPassword) {
+        alert('Please enter a new status or password to update.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/update-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                username: currentUsername,
+                status: newStatus,
+                password: newPassword
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Account updated successfully!');
+            document.getElementById('manage-modal').style.display = 'none';
+            document.getElementById('update-status').value = '';
+            document.getElementById('update-password').value = '';
+        } else {
+            alert('Error updating account: ' + result.message);
+        }
+    } catch (err) {
+        console.error('Update error:', err);
+    }
+});
+        
+        document.getElementById('search-btn').addEventListener('click', async () => {
+    const query = document.getElementById('search-username').value.trim();
+    const resultsList = document.getElementById('search-results');
+    resultsList.innerHTML = '';
+
+    if (!query) return;
+
+    try {
+        const response = await fetch(`/search?username=${query}&currentUser=${currentUsername}`);
+        const users = await response.json();
+
+        if (users.length === 0) {
+            resultsList.innerHTML = '<li>No users found</li>';
+            return;
+        }
+
+        users.forEach(user => {
+            const li = document.createElement('li');
+            li.textContent = user.username;
+            li.style.cursor = 'pointer';
+            li.style.padding = '4px';
+
+            // When clicking a user from the results, track/show their location on the map
+           li.addEventListener('click', () => {
+        if (user.location && user.location.coordinates) {
+            const [lng, lat] = user.location.coordinates;
+            const building = user.location.building;
+            const floor = user.location.floor ;
+            //move map and add marker
+            map.setView([lat, lng], 16);
+            L.marker([lat, lng]).addTo(map).bindPopup(user.username).openPopup();
+
+            // Show floating dialog box with details
+            const dialog = document.getElementById('info-dialog');
+            document.getElementById('dialog-username').textContent = `User: ${user.username}`;
+            document.getElementById('dialog-location').textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+            document.getElementById('dialog-floor').textContent = `Building: ${user.location.building} | ${user.location.floor}`;
+            dialog.style.display = 'block';
+            //Clear the search results list to clean up the UI
+            resultsList.innerHTML = '';
+            document.getElementById('search-username').value = '';
+        } else {
+            alert(`${user.username}'s location is currently unavailable.`);
+        }
+    });
+
+            resultsList.appendChild(li);
+        });
+    } catch (err) {
+        console.error('Search error:', err);
+    }
+});
+
+        const map = L.map("map").setView([0, 0], 16);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "Find My Friend"
+        }).addTo(map);
+
+        const markers = {};
+
+        socket.on("receive-location", (data) => {
+            const { id, latitude, longitude } = data;
+            map.setView([latitude, longitude]);
+            if (markers[id]) {
+                markers[id].setLatLng([latitude, longitude]);
+            } else {
+                markers[id] = L.marker([latitude, longitude])
+                .addTo(map)
+                .bindPopup(username)
+                .openPopup();
+            }
+        });
+    </script>
+</body>
+</html>

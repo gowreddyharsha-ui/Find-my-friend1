@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Login - Find My Friends</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body, html { width: 100%; height: 100%; overflow: hidden; }
+        .bg-container {
+            width: 100%;
+            height: 100vh;
+            background: url('./splashpage.png') no-repeat center center;
+            background-size: 100% 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 24px;
+            width: 360px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login-card h2 { color: #1e293b; font-size: 22px; margin-bottom: 5px; }
+        .login-card p { color: #64748b; font-size: 13px; margin-bottom: 25px; }
+        .input-group {
+            width: 100%;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            outline: none;
+            font-size: 14px;
+            background: #f8fafc;
+        }
+        .input-group span {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .login-btn:hover { background: #1d4ed8; }
+        .switch-text {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .switch-text a { color: #2563eb; text-decoration: none; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="bg-container">
+        <div class="login-card">
+            <h2 id="form-title">Welcome Back!</h2>
+            <p id="form-subtitle">Login to continue</p>
+            
+            <form id="auth-form" style="width: 100%;">
+                <div class="input-group">
+                    <span>👤</span>
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <span>🔒</span>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" id="submit-btn" class="login-btn">Login</button>
+            </form>
+
+            <div class="switch-text">
+                <span id="switch-prompt">Don't have an account?</span> <a id="switch-btn" onclick="toggleMode()">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+
+        function toggleMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('page-title').innerText = isLoginMode ? 'Login - Find My Friends' : 'Sign Up - Find My Friends';
+            document.getElementById('form-title').innerText = isLoginMode ? 'Welcome Back!' : 'Create Account';
+            document.getElementById('form-subtitle').innerText = isLoginMode ? 'Login to continue' : 'Sign up to start tracking';
+            document.getElementById('submit-btn').innerText = isLoginMode ? 'Login' : 'Sign Up';
+            document.getElementById('switch-prompt').innerText = isLoginMode ? "Don't have an account?" : 'Already have an account?';
+            document.getElementById('switch-btn').innerText = isLoginMode ? 'Sign Up' : 'Login';
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Dynamically switch endpoint based on mode
+            const endpoint = isLoginMode ? '/api/login' : '/api/signup';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (isLoginMode) {
+                        localStorage.setItem('mapUsername', data.username);
+                        window.location.href = 'map.html';
+                    } else {
+                        alert('Account created successfully! Please log in.');
+                        toggleMode(); // Switch back to login view
+                    }
+                } else {
+                    alert(data.error || data.message || 'Operation failed');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Something went wrong.');
+            }
+        });
+    </script>
+</body>
+</html>
