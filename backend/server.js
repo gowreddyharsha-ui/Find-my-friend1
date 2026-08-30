@@ -146,6 +146,10 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/findmyfriend';
 
+app.get('/', (req, res) => {
+  res.send('Find My Friend API is running successfully!');
+});
+
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log("Connected to MongoDB");
