@@ -94,6 +94,7 @@
     </div>
 
     <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
         let isLoginMode = true;
 
         function toggleMode() {
@@ -112,7 +113,7 @@
             const password = document.getElementById('password').value;
             
             // Dynamically switch endpoint based on mode
-            const endpoint = isLoginMode ? '/api/login' : '/api/signup';
+            const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/signup';
 
             try {
                 const response = await fetch(endpoint, {
