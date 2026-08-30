@@ -113,15 +113,19 @@
             const password = document.getElementById('password').value;
             
             // Dynamically switch endpoint based on mode
-            const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/signup';
+            const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
 
             try {
-                const response = await fetch(endpoint, {
+                const response = await fetch(API_URL + endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-
+                //Verifyresponce is JSON before calling response.json()
+                const contentType = response.headers.get('content-type');
+                if (!contentType||!response.headers.get('content-type')?.includes('application/json')) {
+                    throw new Error('Invalid response format');
+                }
                 const data = await response.json();
 
                 if (response.ok) {
@@ -133,11 +137,12 @@
                         toggleMode(); // Switch back to login view
                     }
                 } else {
-                    alert(data.error || data.message || 'Operation failed');
+                    //Show error returned fromserver (e.g."User not found" or "Invalid password")
+                    alert(data.error || data.message || 'Operation failed'||'Request failed');
                 }
             } catch (err) {
-                console.error('Error:', err);
-                alert('Something went wrong.');
+                console.error('Network Error:', err);
+                alert('Could not connect to the server. Please try again later.');
             }
         });
     </script>
