@@ -65,9 +65,9 @@
     <!-- Socket.io JS -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5000' 
-  : 'https://find-my-friend1.onrender.com';
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:5000'
+            : 'https://find-my-friend1.onrender.com';
         const currentUsername = localStorage.getItem('mapUsername');
 
 if (!currentUsername) {
