@@ -65,6 +65,9 @@
     <!-- Socket.io JS -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000' 
+  : 'https://find-my-friend1.onrender.com';
         const currentUsername = localStorage.getItem('mapUsername');
 
 if (!currentUsername) {
@@ -133,7 +136,7 @@ document.getElementById('delete-account-btn').addEventListener('click', async ()
     if (confirmDelete) {
         try {
             // 2. Send request to backend
-            const response = await fetch('/delete-account', {
+            const response = await fetch(`${API_URL}/delete-account`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUsername })
@@ -171,7 +174,7 @@ document.getElementById('save-account-btn').addEventListener('click', async () =
     }
 
     try {
-        const response = await fetch('/update-account', {
+        const response = await fetch(`${API_URL}/update-account`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -204,7 +207,7 @@ document.getElementById('save-account-btn').addEventListener('click', async () =
     if (!query) return;
 
     try {
-        const response = await fetch(`/search?username=${query}&currentUser=${currentUsername}`);
+        const response = await fetch(`${API_URL}/api/search?username=${query}&currentUser=${currentUsername}`);
         const users = await response.json();
 
         if (users.length === 0) {
