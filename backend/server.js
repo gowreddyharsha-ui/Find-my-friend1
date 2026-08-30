@@ -17,7 +17,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" }
 });
-
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(express.json());
 
@@ -71,7 +72,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // --- Search API ---
-app.get('/search', async (req, res) => {
+app.get('/api/search', async (req, res) => {
     try {
         const query = req.query.username;
         if (!query) {
@@ -89,7 +90,7 @@ app.get('/search', async (req, res) => {
     }
 });
 // --- DELETE ACCOUNT ROUTE ---
-app.post('/delete-account', async (req, res) => {
+app.post('/api/delete-account', async (req, res) => {
     try {
         const { username } = req.body;
         
