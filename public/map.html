@@ -12,12 +12,12 @@
     </style>
 </head>
 <body>
-    <div id="info-dialog" style="display: none; position: absolute; bottom: 20px; left: 20px; z-index: 1000; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 220px;">
+    <div id="info-dialog" style="display: block; position: fixed; bottom: 20px; left: 20px; z-index: 10000; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 220px;">
     <h3 id="dialog-username" style="margin: 0 0 5px 0; font-size: 16px; color: #333;"></h3>
     <p id="dialog-location" style="margin: 0 0 5px 0; font-size: 14px; color: #666;"></p>
     <p id="dialog-floor" style="margin: 0; font-size: 14px; font-weight: bold; color: #007bff;"></p>
 </div>
-    <div id="search-container" style="position: absolute; top: 10px; left: 60px; z-index: 1000; background: white; padding: 10px; border-radius: 5px;">
+    <div id="search-container" style="position: fixed; top: 10px; left: 60px; z-index: 10000; background: white; padding: 10px; border-radius: 5px;">
         <input type="text" id="search-username" placeholder="Search friend's username..." />
         <button id="search-btn">Search</button>
         <ul id="search-results" style="list-style: none; padding: 0; margin-top: 5px;"></ul>
@@ -113,7 +113,7 @@ if (!currentUsername) {
         //Create or update user marker
         if (!userMarker) {
             userMarker = L.marker([latitude, longitude]).addTo(map)
-            .bindPopup('<b>${currentUsername}</b>(You are here)')
+            .bindPopup('You are here')
             .openPopup();
         } else {
             userMarker.setLatLng([latitude, longitude]);
@@ -257,11 +257,17 @@ document.getElementById('save-account-btn').addEventListener('click', async () =
             L.marker([lat, lng]).addTo(map).bindPopup(user.username).openPopup();
 
             // Show floating dialog box with details
-            const dialog = document.getElementById('info-dialog');
+            const infoDialog = document.getElementById('info-dialog');
             document.getElementById('dialog-username').textContent = `User: ${user.username}`;
             document.getElementById('dialog-location').textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
             document.getElementById('dialog-floor').textContent = `Building: ${user.location.building} | ${user.location.floor}`;
-            dialog.style.display = 'block';
+             
+            //Unhide the dialog box
+            infoDialog.style.display = 'block';
+
+            //Ensure high z-index via JS if CSS isn't overridden Leaflet
+            infoDialog.style.zIndex = '10000';
+
             //Clear the search results list to clean up the UI
             resultsList.innerHTML = '';
             document.getElementById('search-username').value = '';
