@@ -90,9 +90,34 @@ if (!currentUsername) {
     }
         const socket = io();
 
+        //initialize map
+        const map = L.map('map').setView([0, 0], 2);
+
+         //Add Esri satelite tiles with MaxNativeZoom
+         L.titleLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 21,         // Allows users to keep zooming in close)
+            maxNativeZoom: 17,   // Prevents requesting tiles higher than level 17 where Esri lacks imagery
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        }).addTo(map);
+
+        let userMarker;
+
+        //Track and Display User Location on map
        if (navigator.geolocation) {
     navigator.geolocation.watchPosition(position => {
         const { latitude, longitude, altitude } = position.coords;
+
+        //Center map on user
+        map.setView([latitude, longitude], 17);
+
+        //Create or update user marker
+        if (!userMarker) {
+            userMarker = L.marker([latitude, longitude]).addTo(map)
+            .bindPopup('<b>${currentUsername}</b>(You are here)')
+            .openPopup();
+        } else {
+            userMarker.setLatLng([latitude, longitude]);
+        }
         
         // Estimate floor (assuming ~3.5 meters per floor, with ground floor as 0)
         let estimatedFloor = 'Ground Floor';
@@ -111,7 +136,7 @@ if (!currentUsername) {
             building: 'Main Block' 
         });
     }, err => {
-        console.error('Geolocation error:', err);
+        console.error('Geolocation error:', err.message);
     }, { 
         enableHighAccuracy: true, 
         maximumAge: 0 
@@ -252,12 +277,6 @@ document.getElementById('save-account-btn').addEventListener('click', async () =
     }
 });
 
-        const map = L.map("map").setView([0, 0], 16);
-
-       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom: 19,
-  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-}).addTo(map);
 
         const markers = {};
 
