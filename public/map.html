@@ -94,7 +94,7 @@ if (!currentUsername) {
         const map = L.map('map').setView([0, 0], 2);
 
          //Add Esri satelite tiles with MaxNativeZoom
-         L.titleLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 21,         // Allows users to keep zooming in close)
             maxNativeZoom: 17,   // Prevents requesting tiles higher than level 17 where Esri lacks imagery
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
