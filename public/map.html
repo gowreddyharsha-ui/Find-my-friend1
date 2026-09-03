@@ -284,22 +284,6 @@ const customLocations = [
   }
 }
 
-     // If match found, display custom name directly and skip Nominatim API
-    if (matchedCustom) {
-        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${matchedCustom.name}`;
-      return;
-    }
-
-    // Fallback to normal reverse geocoding if coordinates are not in custom list
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-        const data = await res.json();
-        const addressText = data.display_name || "Address unavailable";
-        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${addressText}`;
-      } catch (err) {
-        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Unable to load address`;
-      }
-    
 
     // Geolocation Watcher
     if (navigator.geolocation) {
