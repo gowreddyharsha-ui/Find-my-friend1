@@ -303,26 +303,46 @@ if (navigator.geolocation) {
         maximumAge: 0 
     });
 }
+document.addEventListener('DOMContentLoaded', () => {
+    // Set the profile circle initial
+   constprofileBtn = document.getElementById('profile-btn');
+   if (profileBtn) {
+    profileBtn.addEventListener('click', () => {
+        const display = document.getElementById('profile-username-display');
+        if (display) {
+            display.textContent = localStorage.getItem('mapUsername') || 'User';
+            if (profileModal) {
+                profileModal.style.display = 'block';
+            }
+        }
+    });
+}
 // Open Profile Modal
-document.getElementById('profile-btn').addEventListener('click', () => {
-    document.getElementById('profile-username-display').textContent = currentUsername;
-    document.getElementById('profile-modal').style.display = 'block';
+// 2. Open Settings Click
+  const settingsBtn = document.getElementById('open-settings-btn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      const settingsDialog = document.getElementById('settings-dialog');
+      if (settingsDialog) settingsDialog.style.display = 'block';
+    });
+  }
+
+  // 3. Manage Account Click
+  const manageBtn = document.getElementById('manage-account-btn');
+  if (manageBtn) {
+    manageBtn.addEventListener('click', () => {
+      const manageModal = document.getElementById('manage-modal');
+      const profileModal = document.getElementById('profile-modal');
+      if (manageModal) manageModal.style.display = 'block';
+      if (profileModal) profileModal.style.display = 'none';
+    });
+  }
+
 });
 
 // Set user initial on profile circle
 const activeUser = localStorage.getItem('mapUsername') || 'User';
 document.getElementById('open-settings-btn').innerText = activeUser.charAt(0).toUpperCase();
-
-// Open Settings Modal on Profile Click
-document.getElementById('open-settings-btn').addEventListener('click', () => {
-  document.getElementById('settings-dialog').style.display = 'block';
-});
-
-// Manage Account Logic (Placeholder for now)
-document.getElementById('manage-account-btn').addEventListener('click', () => {
-    document.getElementById('manage-modal').style.display = 'block';
-    document.getElementById('profile-modal').style.display = 'none';
-});
 
 // Delete Account Logic
 document.getElementById('delete-account-btn').addEventListener('click', async () => {
