@@ -1,0 +1,17 @@
+{
+  "name": "Find My Friend",
+  "short_name": "FindFriends",
+  "description": "Live campus tracking for Anurag University",
+  "start_url": "/map.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

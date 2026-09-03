@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Find My Friend</title>
@@ -197,6 +198,12 @@
   <script src="/socket.io/socket.io.js"></script>
   
   <script>
+
+    if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log('PWA Service Worker registered'))
+    .catch(err => console.error('Service Worker registration failed:', err));
+}
 
     // Dictionary of custom coordinates and their custom address names
 const customLocations = [
