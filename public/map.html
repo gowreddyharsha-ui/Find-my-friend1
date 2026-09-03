@@ -186,6 +186,38 @@
   <script src="/socket.io/socket.io.js"></script>
   
   <script>
+
+    // Dictionary of custom coordinates and their custom address names
+const customLocations = [
+  // Academic & Administrative Blocks
+  { lat: 17.4221, lng: 78.6562, name: "Anurag University - A Block" },
+  { lat: 17.4223, lng: 78.6565, name: "Anurag University - B Block" },
+  { lat: 17.4225, lng: 78.6568, name: "Anurag University - C Block" },
+  { lat: 17.4228, lng: 78.6570, name: "Anurag University - D Block" },
+  { lat: 17.4230, lng: 78.6573, name: "Anurag University - E Block" },
+  { lat: 17.4232, lng: 78.6576, name: "Anurag University - F Block" },
+  { lat: 17.4235, lng: 78.6578, name: "Anurag University - G Block" },
+  { lat: 17.4237, lng: 78.6581, name: "Anurag University - H Block" },
+  { lat: 17.4240, lng: 78.6584, name: "Anurag University - I Block" },
+
+  // Canteens & Hangouts
+  { lat: 17.4229, lng: 78.6571, name: "Anurag University - D Block Canteen" },
+  { lat: 17.4241, lng: 78.6585, name: "Anurag University - I Block Canteen" },
+  { lat: 17.4226, lng: 78.6566, name: "Anurag University - Readers" },
+
+  // Auditoriums
+  { lat: 17.4224, lng: 78.6564, name: "Anurag University - A.P.J. Abdul Kalam Auditorium" },
+  { lat: 17.4227, lng: 78.6569, name: "Anurag University - Manas Auditorium" },
+  { lat: 17.4236, lng: 78.6579, name: "Anurag University - Aarambh Auditorium" },
+
+  // Sports Facilities
+  { lat: 17.4215, lng: 78.6580, name: "Anurag University - Sports Complex" },
+  { lat: 17.4210, lng: 78.6585, name: "Anurag University - Cricket Ground" },
+  { lat: 17.4218, lng: 78.6582, name: "Anurag University - Basketball Ground" },
+  { lat: 17.4216, lng: 78.6584, name: "Anurag University - Tennis Ground" },
+  { lat: 17.4214, lng: 78.6581, name: "Anurag University - Badminton Ground" }
+];
+
     const API_URL = window.location.hostname === 'localhost'
         ? 'http://localhost:5000'
         : 'https://find-my-friend1.onrender.com';
@@ -225,6 +257,40 @@
 
     // Reverse Geocoding Function
     async function updateAddress(lat, lng) {
+  // Tolerance threshold (~30-40 meters radius check)
+  const TOLERANCE = 0.00035;
+
+  // Find if current coordinates match any custom campus location
+  const matchedCustom = customLocations.find(loc => {
+    const latDiff = Math.abs(loc.lat - lat);
+    const lngDiff = Math.abs(loc.lng - lng);
+    return latDiff <= TOLERANCE && lngDiff <= TOLERANCE;
+  });
+
+  // If matched, display the custom building/field name directly
+  if (matchedCustom) {
+    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${matchedCustom.name}`;
+    return;
+  }
+
+  // Fallback to OpenStreetMap Reverse Geocoding if outside defined campus spots
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+    const data = await res.json();
+    const addressText = data.display_name || "Address unavailable";
+    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${addressText}`;
+  } catch (err) {
+    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Unable to load address`;
+  }
+}
+
+     // If match found, display custom name directly and skip Nominatim API
+    if (matchedCustom) {
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${matchedCustom.name}`;
+      return;
+    }
+
+    // Fallback to normal reverse geocoding if coordinates are not in custom list
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
         const data = await res.json();
@@ -233,7 +299,7 @@
       } catch (err) {
         document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Unable to load address`;
       }
-    }
+    
 
     // Geolocation Watcher
     if (navigator.geolocation) {
