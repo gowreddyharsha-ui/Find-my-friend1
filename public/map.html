@@ -9,101 +9,120 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body, #map { width: 100%; height: 100%; }
- /* Centered Search Bar */
-.search-container {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: min(90%, 550px);
-  background: #ffffff;
-  padding: 8px 16px;
-  border-radius: 30px; /* Fully rounded search bar */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
 
-.search-icon {
-  flex-shrink: 0;
-}
+        /* Centered Search Bar */
+        .search-container {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: min(90%, 550px);
+          background: #ffffff;
+          padding: 8px 16px;
+          border-radius: 30px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
 
-.search-container input[type="text"] {
-  flex-grow: 1;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  padding: 6px 0;
-  background: transparent;
-}
+        .search-icon { flex-shrink: 0; }
 
-#search-btn {
-  background: #1a73e8;
-  color: white;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 18px;
-  cursor: pointer;
-  font-weight: 500;
-}
+        .search-container input[type="text"] {
+          flex-grow: 1;
+          border: none;
+          outline: none;
+          font-size: 15px;
+          padding: 6px 0;
+          background: transparent;
+        }
 
-/* Gmail-style Profile Icon */
-.profile-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #1a73e8;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 16px;
-  flex-shrink: 0;
-  text-transform: uppercase;
-}
+        #search-btn {
+          background: #1a73e8;
+          color: white;
+          border: none;
+          padding: 6px 14px;
+          border-radius: 18px;
+          cursor: pointer;
+          font-weight: 500;
+        }
 
-/* Curvy Middle Floating Dialog */
-.center-dialog {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10000;
-  background: #ffffff;
-  width: min(90%, 380px);
-  padding: 24px;
-  border-radius: 20px; /* Curvy edges */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  display: block;
-}
+        /* Gmail-style Profile Icon */
+        .profile-circle {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #1a73e8;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
+          font-weight: bold;
+          font-size: 16px;
+          flex-shrink: 0;
+          text-transform: uppercase;
+          cursor: pointer;
+        }
 
-.close-btn {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  border: none;
-  background: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #888;
-}
+        /* Curvy Middle Floating Dialog */
+        .center-dialog {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10000;
+          background: #ffffff;
+          width: min(90%, 380px);
+          padding: 24px;
+          border-radius: 20px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+          display: block;
+        }
 
-#map {
-  height: 100vh;
-  width: 100%;
-}
+        .close-btn {
+          position: absolute;
+          top: 12px;
+          right: 16px;
+          border: none;
+          background: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: #888;
+        }
+
+        #search-results {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border-radius: 12px;
+          margin-top: 5px;
+          list-style: none;
+          padding: 0;
+          max-height: 150px;
+          overflow-y: auto;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+          z-index: 10001;
+        }
+
+        #search-results li {
+          padding: 10px 14px;
+          cursor: pointer;
+          border-bottom: 1px solid #eee;
+        }
+
+        #search-results li:hover {
+          background-color: #f1f3f4;
+        }
     </style>
 </head>
 <body>
-    <body>
 
   <!-- Google-Style Top Centered Search Bar -->
   <div class="search-container">
-    <!-- Black & White Magnifier Icon -->
     <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="#5f6368">
       <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
     </svg>
@@ -111,11 +130,13 @@
     <input type="text" id="search-input" placeholder="Search friend's username..." />
     <button id="search-btn">Search</button>
 
-    <!-- Profile Avatar Circle Link (Gmail style) -->
-    <a href="#" id="profile-link" class="profile-circle" title="Profile">U</a>
+    <!-- Profile Avatar Circle Link (Triggers Settings) -->
+    <a href="#" id="profile-link" class="profile-circle" title="Settings">U</a>
+
+    <ul id="search-results"></ul>
   </div>
 
-  <!-- Curvy Middle Dialog Box -->
+  <!-- User Details Dialog Box -->
   <div id="info-dialog" class="center-dialog">
     <button class="close-btn" onclick="document.getElementById('info-dialog').style.display='none'">&times;</button>
     <h3>User Location Details</h3>
@@ -125,370 +146,263 @@
     <p id="dialog-floor"><strong>Floor:</strong> Ground Floor</p>
   </div>
 
+  <!-- Settings Dialog (Logout, Manage, Delete) -->
+  <div id="settings-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001; background: white; padding: 24px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); min-width: 280px;">
+    <button onclick="document.getElementById('settings-dialog').style.display='none'" style="position: absolute; top: 12px; right: 16px; border: none; background: none; font-size: 22px; cursor: pointer; color: #888;">&times;</button>
+    <h3 style="margin: 0 0 16px 0; font-size: 18px; color: #333;">Settings</h3>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <button id="manage-account-btn" style="padding: 10px; cursor: pointer; border: 1px solid #ccc; background: #f8f9fa; border-radius: 6px; font-weight: bold;">Manage Account</button>
+      <button id="logout-btn" style="padding: 10px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Log Out</button>
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 2px 0;" />
+      <button id="delete-account-btn" style="padding: 10px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Delete Account</button>
+    </div>
+  </div>
+
+  <!-- Manage Account Modal -->
+  <div id="manage-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10002; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 290px;">
+      <button onclick="document.getElementById('manage-modal').style.display='none'" style="float: right; border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
+      <h3 style="margin-top: 0; margin-bottom: 15px;">Manage Account</h3>
+      
+      <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 14px; margin-bottom: 5px;">Update Status:</label>
+          <input type="text" id="update-status" placeholder="E.g., In class, At the library..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+      </div>
+
+      <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 14px; margin-bottom: 5px;">New Password:</label>
+          <input type="password" id="update-password" placeholder="Enter new password" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+      </div>
+
+      <button id="save-account-btn" style="width: 100%; padding: 10px; cursor: pointer; border: none; background: #28a745; color: white; border-radius: 4px; font-weight: bold;">Save Changes</button>
+  </div>
+
   <!-- Map Container -->
   <div id="map"></div>
 
-</body>
-   
-    <!-- 1. Centered Search Bar (Magnifier on Left, Profile Circle on Right) -->
-   
-
-    <!-- Profile Circle (Triggers Settings Modal) -->
-  <button onclick="document.getElementById('settings-dialog').style.display='block'" id="open-settings-btn" style="width: 36px; height: 36px; border-radius: 50%; background: #007bff; color: white; border: none; font-weight: bold; font-size: 16px; cursor: pointer; flex-shrink: 0;" title="Settings">U</button>
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <!-- Socket.io JS -->
+  <script src="/socket.io/socket.io.js"></script>
   
-  <ul id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; margin-top: 5px; list-style: none; padding: 0; max-height: 150px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></ul>
-</div>
-
-<!-- 2. Curvy Middle Dialog Box -->
-
-
-<!-- 3. Curvy Settings Dialog (Contains Logout & Delete Account) -->
-<div id="settings-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001; background: white; padding: 24px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); min-width: 280px;">
-  <button onclick="document.getElementById('settings-dialog').style.display='none'" style="position: absolute; top: 12px; right: 16px; border: none; background: none; font-size: 22px; cursor: pointer; color: #888;">&times;</button>
-  <h3 style="margin: 0 0 16px 0; font-size: 18px; color: #333;">Settings</h3>
-  
-  <div style="display: flex; flex-direction: column; gap: 12px;">
-    <button id="logout-btn" style="padding: 10px; background: #007bff; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">Log Out</button>
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 2px 0;" />
-    <button id="delete-account-btn" style="padding: 10px; background: #dc3545; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">Delete Account</button>
-  </div>
-</div>
-    
-    <!-- Profile Button (Top Right) -->
-
-    
-    <!-- Menu Options -->
-    <button id="manage-account-btn" style="margin-bottom: 10px; width: 100%; padding: 10px; cursor: pointer; border: 1px solid #ccc; background: #f8f9fa; border-radius: 4px;">Manage Account</button>
-    
-    <button id="delete-account-btn" style="width: 100%; padding: 10px; cursor: pointer; border: none; background: #dc3545; color: white; border-radius: 4px;">Delete Account</button>
-</div>
-
-<!-- MANAGE ACCOUNT MODAL -->
-    <div id="manage-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2001; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 280px;">
-        <button onclick="document.getElementById('manage-modal').style.display='none'" style="float: right; border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
-        <h2 style="margin-top: 0;">Manage Account</h2>
+  <script>
+    const API_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000'
+        : 'https://find-my-friend1.onrender.com';
         
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; font-size: 14px; margin-bottom: 5px;">Update Status:</label>
-            <input type="text" id="update-status" placeholder="E.g., In class, At the library..." style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
+    const currentUsername = localStorage.getItem('mapUsername');
 
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; font-size: 14px; margin-bottom: 5px;">New Password:</label>
-            <input type="password" id="update-password" placeholder="Enter new password" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
-        </div>
-
-        <button id="save-account-btn" style="width: 100%; padding: 10px; cursor: pointer; border: none; background: #28a745; color: white; border-radius: 4px;">Save Changes</button>
-    </div>
-    <!-- END OF HTML -->
-
-    <!-- Leaflet JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <!-- Socket.io JS -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const API_URL = window.location.hostname === 'localhost'
-            ? 'http://localhost:5000'
-            : 'https://find-my-friend1.onrender.com';
-        const currentUsername = localStorage.getItem('mapUsername');
-
-if (!currentUsername) {
-    window.location.href = 'login.html';
-} else {
-    console.log('Logged in as:', currentUsername);
-    
-    const userDisplay = document.getElementById('username-display');
-    if (userDisplay) {
-        userDisplay.innerText = currentUsername;
-    }
-}
-        // Retrieve the logged-in username from localStorage
-        const username = localStorage.getItem('mapUsername');
-
-    // If no user is logged in, redirect them back to the login page
-    if (!username) {
+    if (!currentUsername) {
         window.location.href = 'login.html';
-        
-    }
-        const socket = io();
-
-        //initialize map
-        const map = L.map('map').setView([0, 0], 2);
-
-         //Add Esri satelite tiles with MaxNativeZoom
-         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 21,         // Allows users to keep zooming in close)
-            maxNativeZoom: 17,   // Prevents requesting tiles higher than level 17 where Esri lacks imagery
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-        }).addTo(map);
-
-        let userMarker;
-
-        // 1. Get logged-in username & update profile circle
-// Reuse the username loaded above.
-document.getElementById('profile-link').innerText = username.charAt(0);
-document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${username}`;
-
-// 2. Reverse Geocoding Function (Converts Lat/Lng to Street Address)
-async function updateAddress(lat, lng) {
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-    const data = await res.json();
-    const addressText = data.display_name || "Address unavailable";
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${addressText}`;
-  } catch (err) {
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Unable to load address`;
-  }
-}
-
-// 3. Update geolocation tracking block
-if (navigator.geolocation) {
-  navigator.geolocation.watchPosition((position) => {
-    const { latitude, longitude, altitude } = position.coords;
-
-    // Center map & marker
-    map.setView([latitude, longitude], 17);
-    if (!userMarker) {
-      userMarker = L.marker([latitude, longitude]).addTo(map);
-    } else {
-      userMarker.setLatLng([latitude, longitude]);
     }
 
-    // Update dialog box values
-    document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+    const socket = io();
 
-    // Fetch and display real address
-    updateAddress(latitude, longitude);
+    // Initialize map
+    const map = L.map('map').setView([0, 0], 2);
 
-  }, (err) => console.error("Geolocation error:", err.message), { enableHighAccuracy: true });
-}
+    // Add Esri satellite tiles
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 21,
+        maxNativeZoom: 17,
+        attribution: 'Tiles &copy; Esri'
+    }).addTo(map);
 
-        //Track and Display User Location on map
-       if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(position => {
-        const { latitude, longitude, altitude } = position.coords;
+    let userMarker;
 
-        //Center map on user
-        map.setView([latitude, longitude], 17);
+    // Set Profile Circle Initial & Open Settings on Click
+    const profileLink = document.getElementById('profile-link');
+    if (profileLink) {
+      profileLink.innerText = currentUsername.charAt(0).toUpperCase();
+      profileLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('settings-dialog').style.display = 'block';
+      });
+    }
 
-        //Create or update user marker
-        if (!userMarker) {
-            userMarker = L.marker([latitude, longitude]).addTo(map)
-            .bindPopup('You are here')
-            .openPopup();
-        } else {
-            userMarker.setLatLng([latitude, longitude]);
-        }
-        
-        // Estimate floor (assuming ~3.5 meters per floor, with ground floor as 0)
-        let estimatedFloor = 'Ground Floor';
-        if (altitude !== null && altitude !== undefined) {
-            const baseAltitude = 0; 
-            const heightDiff = altitude - baseAltitude;
-            const floorNum = Math.floor(heightDiff / 3.5);
-            estimatedFloor = floorNum > 0 ? `Floor ${floorNum}` : 'Ground Floor';
-        }
-        // Updated event name here to 'update_location'
-        socket.emit('update_location', { 
-            username: currentUsername, 
-            latitude: latitude, 
-            longitude: longitude, 
-            floor: estimatedFloor,
-            building: 'Main Block' 
-        });
-    }, err => {
-        console.error('Geolocation error:', err.message);
-    }, { 
-        enableHighAccuracy: true, 
-        maximumAge: 0 
+    // Set default Username display in dialog
+    document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${currentUsername}`;
+
+    // Reverse Geocoding Function
+    async function updateAddress(lat, lng) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const data = await res.json();
+        const addressText = data.display_name || "Address unavailable";
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${addressText}`;
+      } catch (err) {
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Unable to load address`;
+      }
+    }
+
+    // Geolocation Watcher
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(position => {
+          const { latitude, longitude, altitude } = position.coords;
+
+          map.setView([latitude, longitude], 17);
+
+          if (!userMarker) {
+              userMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('You are here').openPopup();
+          } else {
+              userMarker.setLatLng([latitude, longitude]);
+          }
+          
+          document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          updateAddress(latitude, longitude);
+
+          let estimatedFloor = 'Ground Floor';
+          if (altitude !== null && altitude !== undefined) {
+              const floorNum = Math.floor(altitude / 3.5);
+              estimatedFloor = floorNum > 0 ? `Floor ${floorNum}` : 'Ground Floor';
+          }
+
+          socket.emit('update_location', { 
+              username: currentUsername, 
+              latitude: latitude, 
+              longitude: longitude, 
+              floor: estimatedFloor,
+              building: 'Main Block' 
+          });
+      }, err => console.error('Geolocation error:', err.message), { 
+          enableHighAccuracy: true, 
+          maximumAge: 0 
+      });
+    }
+
+    // Settings Modal Handlers
+    document.getElementById('manage-account-btn').addEventListener('click', () => {
+        document.getElementById('manage-modal').style.display = 'block';
+        document.getElementById('settings-dialog').style.display = 'none';
     });
-}
-document.addEventListener('DOMContentLoaded', () => {
-    // Set the profile circle initial
-   const profileBtn = document.getElementById('profile-btn');
-   if (profileBtn) {
-    profileBtn.addEventListener('click', () => {
-        const display = document.getElementById('profile-username-display');
-        if (display) {
-            display.textContent = localStorage.getItem('mapUsername') || 'User';
-            if (profileModal) {
-                profileModal.style.display = 'block';
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('mapUsername');
+        window.location.href = 'login.html';
+      });
+    }
+
+    document.getElementById('delete-account-btn').addEventListener('click', async () => {
+        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+            try {
+                const response = await fetch(`${API_URL}/delete-account`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUsername })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Your account has been deleted successfully.');
+                    localStorage.removeItem('mapUsername');
+                    window.location.href = 'login.html';
+                } else {
+                    alert('Error deleting account. Please try again.');
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
             }
         }
     });
-}
-// Open Profile Modal
-// 2. Open Settings Click
-  const settingsBtn = document.getElementById('open-settings-btn');
-  if (settingsBtn) {
-    settingsBtn.addEventListener('click', () => {
-      const settingsDialog = document.getElementById('settings-dialog');
-      if (settingsDialog) settingsDialog.style.display = 'block';
-    });
-  }
 
-  // 3. Manage Account Click
-  const manageBtn = document.getElementById('manage-account-btn');
-  if (manageBtn) {
-    manageBtn.addEventListener('click', () => {
-      const manageModal = document.getElementById('manage-modal');
-      const profileModal = document.getElementById('profile-modal');
-      if (manageModal) manageModal.style.display = 'block';
-      if (profileModal) profileModal.style.display = 'none';
-    });
-  }
+    // Save Account Changes
+    document.getElementById('save-account-btn').addEventListener('click', async () => {
+        const newStatus = document.getElementById('update-status').value.trim();
+        const newPassword = document.getElementById('update-password').value.trim();
 
-});
-
-// Set user initial on profile circle
-const activeUser = localStorage.getItem('mapUsername') || 'User';
-document.getElementById('open-settings-btn').innerText = activeUser.charAt(0).toUpperCase();
-
-// Delete Account Logic
-document.getElementById('delete-account-btn').addEventListener('click', async () => {
-    // 1. Ask for confirmation so the user doesn't delete by accident
-    const confirmDelete = confirm('Are you sure you want to delete your account? This action cannot be undone.');
-    
-    if (confirmDelete) {
-        try {
-            // 2. Send request to backend
-            const response = await fetch(`${API_URL}/delete-account`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUsername })
-            });
-
-            const result = await response.json();
-            
-            if (result.success) {
-                alert('Your account has been deleted successfully.');
-                // 3. Clear local storage and log them out
-                localStorage.removeItem('mapUsername');
-                window.location.href = 'login.html';
-            } else {
-                alert('Error deleting account. Please try again.');
-            }
-        } catch (err) {
-            console.error('Delete error:', err);
-        }
-    }
-});
-// Open Manage Account Modal from Profile Modal
-document.getElementById('manage-account-btn').addEventListener('click', () => {
-    document.getElementById('manage-modal').style.display = 'block';
-    document.getElementById('profile-modal').style.display = 'none';
-});
-
-// Save Account Changes (Status and Password)
-document.getElementById('save-account-btn').addEventListener('click', async () => {
-    const newStatus = document.getElementById('update-status').value.trim();
-    const newPassword = document.getElementById('update-password').value.trim();
-
-    if (!newStatus && !newPassword) {
-        alert('Please enter a new status or password to update.');
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/update-account`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                username: currentUsername,
-                status: newStatus,
-                password: newPassword
-            })
-        });
-
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('Account updated successfully!');
-            document.getElementById('manage-modal').style.display = 'none';
-            document.getElementById('update-status').value = '';
-            document.getElementById('update-password').value = '';
-        } else {
-            alert('Error updating account: ' + result.message);
-        }
-    } catch (err) {
-        console.error('Update error:', err);
-    }
-});
-        
-        document.getElementById('search-btn').addEventListener('click', async () => {
-    const query = document.getElementById('search-username').value.trim();
-    const resultsList = document.getElementById('search-results');
-    resultsList.innerHTML = '';
-
-    if (!query) return;
-
-    try {
-        const response = await fetch(`${API_URL}/api/search?username=${query}&currentUser=${currentUsername}`);
-        const users = await response.json();
-
-        if (users.length === 0) {
-            resultsList.innerHTML = '<li>No users found</li>';
+        if (!newStatus && !newPassword) {
+            alert('Please enter a new status or password to update.');
             return;
         }
 
-        users.forEach(user => {
-            const li = document.createElement('li');
-            li.textContent = user.username;
-            li.style.cursor = 'pointer';
-            li.style.padding = '4px';
+        try {
+            const response = await fetch(`${API_URL}/update-account`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: currentUsername,
+                    status: newStatus,
+                    password: newPassword
+                })
+            });
 
-            // When clicking a user from the results, track/show their location on the map
-           li.addEventListener('click', () => {
-        if (user.location && user.location.coordinates) {
-            const [lng, lat] = user.location.coordinates;
-            const building = user.location.building;
-            const floor = user.location.floor ;
-            //move map and add marker
-            map.setView([lat, lng], 16);
-            L.marker([lat, lng]).addTo(map).bindPopup(user.username).openPopup();
+            const result = await response.json();
+            if (result.success) {
+                alert('Account updated successfully!');
+                document.getElementById('manage-modal').style.display = 'none';
+                document.getElementById('update-status').value = '';
+                document.getElementById('update-password').value = '';
+            } else {
+                alert('Error updating account: ' + result.message);
+            }
+        } catch (err) {
+            console.error('Update error:', err);
+        }
+    });
+            
+    // Search Button Click Listener
+    document.getElementById('search-btn').addEventListener('click', async () => {
+        const query = document.getElementById('search-input').value.trim();
+        const resultsList = document.getElementById('search-results');
+        resultsList.innerHTML = '';
 
-            // Show floating dialog box with details
-            const infoDialog = document.getElementById('info-dialog');
-            document.getElementById('dialog-username').textContent = `User: ${user.username}`;
-            document.getElementById('dialog-location').textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
-            document.getElementById('dialog-floor').textContent = `Building: ${user.location.building} | ${user.location.floor}`;
-             
-            //Unhide the dialog box
-            infoDialog.style.display = 'block';
+        if (!query) return;
 
-            //Ensure high z-index via JS if CSS isn't overridden Leaflet
-            infoDialog.style.zIndex = '10000';
+        try {
+            const response = await fetch(`${API_URL}/api/search?username=${query}&currentUser=${currentUsername}`);
+            const users = await response.json();
 
-            //Clear the search results list to clean up the UI
-            resultsList.innerHTML = '';
-            document.getElementById('search-username').value = '';
-        } else {
-            alert(`${user.username}'s location is currently unavailable.`);
+            if (!users || users.length === 0) {
+                resultsList.innerHTML = '<li>No users found</li>';
+                return;
+            }
+
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user.username;
+
+                li.addEventListener('click', () => {
+                    if (user.location && user.location.coordinates) {
+                        const [lng, lat] = user.location.coordinates;
+                        
+                        map.setView([lat, lng], 16);
+                        L.marker([lat, lng]).addTo(map).bindPopup(user.username).openPopup();
+
+                        const infoDialog = document.getElementById('info-dialog');
+                        document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${user.username}`;
+                        document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                        document.getElementById('dialog-floor').innerHTML = `<strong>Building:</strong> ${user.location.building || 'Main Block'} | <strong>Floor:</strong> ${user.location.floor || 'Ground Floor'}`;
+                         
+                        infoDialog.style.display = 'block';
+                        updateAddress(lat, lng);
+
+                        resultsList.innerHTML = '';
+                        document.getElementById('search-input').value = '';
+                    } else {
+                        alert(`${user.username}'s location is currently unavailable.`);
+                    }
+                });
+
+                resultsList.appendChild(li);
+            });
+        } catch (err) {
+            console.error('Search error:', err);
         }
     });
 
-            resultsList.appendChild(li);
-        });
-    } catch (err) {
-        console.error('Search error:', err);
-    }
-});
+    const markers = {};
 
-
-        const markers = {};
-
-        socket.on("receive-location", (data) => {
-            const { id, latitude, longitude } = data;
-            map.setView([latitude, longitude]);
-            if (markers[id]) {
-                markers[id].setLatLng([latitude, longitude]);
-            } else {
-                markers[id] = L.marker([latitude, longitude])
-                .addTo(map)
-                .bindPopup(username)
-                .openPopup();
-            }
-        });
-    </script>
+    socket.on("receive-location", (data) => {
+        const { id, latitude, longitude } = data;
+        map.setView([latitude, longitude]);
+        if (markers[id]) {
+            markers[id].setLatLng([latitude, longitude]);
+        } else {
+            markers[id] = L.marker([latitude, longitude]).addTo(map).bindPopup(currentUsername).openPopup();
+        }
+    });
+  </script>
 </body>
 </html>
