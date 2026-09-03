@@ -61,8 +61,9 @@
 /* Curvy Middle Floating Dialog */
 .center-dialog {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
+  top: 80px;
+  right: 20%;
+  left: auto;
   transform: translateX(-50%);
   z-index: 10000;
   background: #ffffff;
@@ -135,7 +136,7 @@
     <div id="map"></div>
 
     <!-- Profile Circle (Triggers Settings Modal) -->
-  <button id="open-settings-btn" style="width: 36px; height: 36px; border-radius: 50%; background: #007bff; color: white; border: none; font-weight: bold; font-size: 16px; cursor: pointer; flex-shrink: 0;" title="Settings">U</button>
+  <button onclick="document.getElementById('settings-dialog').style.display='block'" id="open-settings-btn" style="width: 36px; height: 36px; border-radius: 50%; background: #007bff; color: white; border: none; font-weight: bold; font-size: 16px; cursor: pointer; flex-shrink: 0;" title="Settings">U</button>
   
   <ul id="search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; margin-top: 5px; list-style: none; padding: 0; max-height: 150px; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></ul>
 </div>
