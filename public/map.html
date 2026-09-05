@@ -336,6 +336,14 @@ const buildingName = data.building || getBuildingName(data.latitude, data.longit
 
 document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${buildingName}`;
 
+      function getBuildingName(lat, lng) {
+  const TOLERANCE = 0.00035; // ~35m radius check
+  const matched = customLocations.find(loc => {
+    return Math.abs(loc.lat - lat) <= TOLERANCE && Math.abs(loc.lng - lng) <= TOLERANCE;
+  });
+  return matched ? matched.name : 'Campus Grounds';
+}
+
     // Reverse Geocoding Function
     async function updateAddress(lat, lng) {
   // Tolerance threshold (~30-40 meters radius check)
@@ -380,8 +388,14 @@ document.getElementById('dialog-building').innerHTML = `<strong>Building:</stron
               userMarker.setLatLng([latitude, longitude]);
           }
           
-          document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-          updateAddress(latitude, longitude);
+               // Calculate dynamic building name
+                  const buildingName = getBuildingName(latitude, longitude);
+
+                     document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                     document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${buildingName}`;
+                     updateAddress(latitude, longitude);
+
+         
 
           let estimatedFloor = 'Ground Floor';
           if (altitude !== null && altitude !== undefined) {
@@ -394,7 +408,7 @@ document.getElementById('dialog-building').innerHTML = `<strong>Building:</stron
               latitude: latitude, 
               longitude: longitude, 
               floor: currentFloorName,
-              building: getBuildingName(latitude, longitude)
+              building: BuildingName
           });
         },
         err => {
