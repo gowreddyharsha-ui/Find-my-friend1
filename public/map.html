@@ -189,6 +189,51 @@
       <button id="save-account-btn" style="width: 100%; padding: 10px; cursor: pointer; border: none; background: #28a745; color: white; border-radius: 4px; font-weight: bold;">Save Changes</button>
   </div>
 
+  let groundPressure = null;
+let currentFloorName = 'Ground Floor';
+
+if ('Barometer' in window) {
+  try {
+    // Sample barometer once per second (1 Hz)
+    const barometer = new Barometer({ frequency: 1 });
+
+    barometer.addEventListener('reading', () => {
+      const currentPressure = barometer.pressure; // Pressure in hPa
+
+      // Set initial ground pressure baseline on first reading
+      if (!groundPressure) {
+        groundPressure = currentPressure;
+      }
+
+      // Standard atmospheric pressure drop: ~0.42 hPa per floor (approx 3.5 meters)
+      const pressureDifference = groundPressure - currentPressure;
+      const calculatedFloor = Math.round(pressureDifference / 0.42);
+
+      if (calculatedFloor <= 0) {
+        currentFloorName = 'Ground Floor';
+      } else {
+        currentFloorName = `Floor ${calculatedFloor}`;
+      }
+
+      // Update dialog display in real time
+      const floorElem = document.getElementById('dialog-floor');
+      if (floorElem) {
+        floorElem.innerHTML = `<strong>Floor:</strong> ${currentFloorName} (${currentPressure.toFixed(2)} hPa)`;
+      }
+    });
+
+    barometer.addEventListener('error', event => {
+      console.warn('Barometer error:', event.error.name, event.error.message);
+    });
+
+    barometer.start();
+  } catch (err) {
+    console.error('Barometer initialization failed:', err);
+  }
+} else {
+  alert('Barometer API is not supported on this browser or needs chrome://flags enabled.');
+}
+
   <!-- Map Container -->
   <div id="map"></div>
 
@@ -342,8 +387,8 @@ function getBuildingName(lat, lng) {
               username: currentUsername, 
               latitude: latitude, 
               longitude: longitude, 
-              floor: estimatedFloor,
-              building: currentBuilding 
+              floor: currentFloorName,
+              building: getBuildingName(latitude, longitude)
           });
         },
         err => {
