@@ -270,6 +270,18 @@ const customLocations = [
       });
     }
 
+    // Returns the custom campus location name if within tolerance, otherwise defaults to 'Campus Grounds'
+function getBuildingName(lat, lng) {
+  const TOLERANCE = 0.00035; // ~35m radius match
+  const matched = customLocations.find(loc => {
+    const latDiff = Math.abs(loc.lat - lat);
+    const lngDiff = Math.abs(loc.lng - lng);
+    return latDiff <= TOLERANCE && lngDiff <= TOLERANCE;
+  });
+
+  return matched ? matched.name : 'Campus Grounds';
+}
+
     // Set default Username display in dialog
     document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${currentUsername}`;
 
@@ -305,7 +317,8 @@ const customLocations = [
 
     // Geolocation Watcher
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(position => {
+      navigator.geolocation.watchPosition(
+        position => {
           const { latitude, longitude, altitude } = position.coords;
 
           map.setView([latitude, longitude], 17);
@@ -330,13 +343,24 @@ const customLocations = [
               latitude: latitude, 
               longitude: longitude, 
               floor: estimatedFloor,
-              building: 'Main Block' 
+              building: currentBuilding 
           });
-      }, err => console.error('Geolocation error:', err.message), { 
-          enableHighAccuracy: true, 
-          maximumAge: 0 
-      });
+        },
+        err => {
+          console.error('Geolocation error:', err.message);
+          alert(`Location Error (${err.code}): ${err.message}`);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 5000
+        }
+      );
     }
+
+      else {
+        alert('Geolocation is not supported by your browser.');
+      }
 
     // Settings Modal Handlers
     document.getElementById('manage-account-btn').addEventListener('click', () => {
