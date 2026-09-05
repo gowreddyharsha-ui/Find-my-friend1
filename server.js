@@ -25,6 +25,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(express.json());
 
+// 📍 Paste starting at Line 28
+app.post('/update-account', async (req, res) => {
+  try {
+    const { userId, username, email } = req.body;
+    // Database update logic here
+    res.json({ success: true, message: "Account updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update account" });
+  }
+});
+
+app.post('/delete-account', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    // Database deletion logic here
+    res.json({ success: true, message: "Account deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -162,6 +183,55 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/findmyfrie
 //app.get('/api', (req, res) => {
  // res.send('Find My Friend API is running successfully!');
 //});
+
+// --- Account Management Routes ---
+app.post('/update-account', async (req, res) => {
+    try {
+        const { username, status, password } = req.body;
+        if (!username) {
+            return res.status(400).json({ success: false, message: "Username is required" });
+        }
+
+        const updateFields = {};
+        if (status) updateFields.status = status;
+        if (password) updateFields.password = password;
+
+        const updatedUser = await User.findOneAndUpdate(
+            { username: username },
+            { $set: updateFields },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.json({ success: true, message: "Account updated successfully" });
+    } catch (err) {
+        console.error("Update error:", err);
+        res.status(500).json({ success: false, message: "Server error during update" });
+    }
+});
+
+app.post('/delete-account', async (req, res) => {
+    try {
+        const { username } = req.body;
+        if (!username) {
+            return res.status(400).json({ success: false, message: "Username is required" });
+        }
+
+        const deletedUser = await User.findOneAndDelete({ username: username });
+
+        if (!deletedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.json({ success: true, message: "Account deleted successfully" });
+    } catch (err) {
+        console.error("Delete error:", err);
+        res.status(500).json({ success: false, message: "Server error during deletion" });
+    }
+});
 
 mongoose.connect(MONGO_URI)
   .then(() => {

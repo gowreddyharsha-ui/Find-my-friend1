@@ -352,63 +352,74 @@ const customLocations = [
       });
     }
 
-    document.getElementById('delete-account-btn').addEventListener('click', async () => {
-        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-            try {
-                const response = await fetch(`${API_URL}/delete-account`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUsername })
-                });
+   // Delete Account Handler
+document.getElementById('delete-account-btn').addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
 
-                const result = await response.json();
-                if (result.success) {
-                    alert('Your account has been deleted successfully.');
-                    localStorage.removeItem('mapUsername');
-                    window.location.href = 'login.html';
-                } else {
-                    alert('Error deleting account. Please try again.');
-                }
-            } catch (err) {
-                console.error('Delete error:', err);
-            }
-        }
-    });
+    try {
+        const response = await fetch('/delete-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUsername })
+        });
 
-    // Save Account Changes
-    document.getElementById('save-account-btn').addEventListener('click', async () => {
-        const newStatus = document.getElementById('update-status').value.trim();
-        const newPassword = document.getElementById('update-password').value.trim();
-
-        if (!newStatus && !newPassword) {
-            alert('Please enter a new status or password to update.');
-            return;
+        if (!response.ok) {
+            throw new Error(`Server returned HTTP status ${response.status}`);
         }
 
-        try {
-            const response = await fetch(`${API_URL}/update-account`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    username: currentUsername,
-                    status: newStatus,
-                    password: newPassword
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                alert('Account updated successfully!');
-                document.getElementById('manage-modal').style.display = 'none';
-                document.getElementById('update-status').value = '';
-                document.getElementById('update-password').value = '';
-            } else {
-                alert('Error updating account: ' + result.message);
-            }
-        } catch (err) {
-            console.error('Update error:', err);
+        const result = await response.json();
+        if (result.success) {
+            alert('Your account has been deleted successfully.');
+            localStorage.removeItem('mapUsername');
+            window.location.href = 'login.html';
+        } else {
+            alert(result.message || 'Error deleting account.');
         }
-    });
+    } catch (err) {
+        console.error('Delete error:', err.message);
+        alert('Could not connect to server or endpoint missing.');
+    }
+});
+
+// Save Account Changes Handler
+document.getElementById('save-account-btn').addEventListener('click', async () => {
+    const newStatus = document.getElementById('update-status').value.trim();
+    const newPassword = document.getElementById('update-password').value.trim();
+
+    if (!newStatus && !newPassword) {
+        alert('Please enter a new status or password to update.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/update-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                username: currentUsername,
+                status: newStatus,
+                password: newPassword
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned HTTP status ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.success) {
+            alert('Account updated successfully!');
+            document.getElementById('manage-modal').style.display = 'none';
+            document.getElementById('update-status').value = '';
+            document.getElementById('update-password').value = '';
+        } else {
+            alert(result.message || 'Error updating account.');
+        }
+    } catch (err) {
+        console.error('Update error:', err.message);
+        alert('Could not connect to server or endpoint missing.');
+    }
+});
             
     // Search Button Click Listener
     document.getElementById('search-btn').addEventListener('click', async () => {
