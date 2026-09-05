@@ -155,6 +155,7 @@
     <p id="dialog-username"><strong>User:</strong> --</p>
     <p id="dialog-address"><strong>Address:</strong> Fetching address...</p>
     <p id="dialog-coords"><strong>Coordinates:</strong> --, --</p>
+    <P id="dialog-building"><strong>Building:</strong> --</p>
     <p id="dialog-floor"><strong>Floor:</strong> Ground Floor</p>
   </div>
 
@@ -329,6 +330,11 @@ function getBuildingName(lat, lng) {
 
     // Set default Username display in dialog
     document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${currentUsername}`;
+
+     // Set the building name dynamically from socket data or coordinate calculation
+const buildingName = data.building || getBuildingName(data.latitude, data.longitude);
+
+document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${buildingName}`;
 
     // Reverse Geocoding Function
     async function updateAddress(lat, lng) {
