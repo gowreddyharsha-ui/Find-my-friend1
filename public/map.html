@@ -330,33 +330,48 @@ function getBuildingName(lat, lng) {
   return matched ? matched.name : 'Campus Grounds';
 }
 
+// Check if coordinates fall within Anurag University campus boundaries
+function isInsideCampus(lat, lng) {
+  const minLat = 17.4180, maxLat = 17.4260;
+  const minLng = 78.6520, maxLng = 78.6620;
+  return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+}
 
-    // Reverse Geocoding Function
-    async function updateAddress(lat, lng) {
-  // Tolerance threshold (~30-40 meters radius check)
-  const TOLERANCE = 0.00035;
+// Dynamic Address Resolver
+async function updateAddress(lat, lng) {
+  const TOLERANCE = 0.00045; // ~45m check for specific buildings
 
-  // Find if current coordinates match any custom campus location
-  const matchedCustom = customLocations.find(loc => {
-    const latDiff = Math.abs(loc.lat - lat);
-    const lngDiff = Math.abs(loc.lng - lng);
-    return latDiff <= TOLERANCE && lngDiff <= TOLERANCE;
+  // 1. INSIDE CAMPUS - Match Specific Custom Building
+  const matchedBuilding = customLocations.find(loc => {
+    return Math.abs(loc.lat - lat) <= TOLERANCE && Math.abs(loc.lng - lng) <= TOLERANCE;
   });
 
-  // If matched, display the custom building/field name directly
-  if (matchedCustom) {
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${matchedCustom.name}`;
+  if (matchedBuilding) {
+    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${matchedBuilding.name}`;
     return;
   }
 
-  // Fallback to OpenStreetMap Reverse Geocoding if outside defined campus spots
+  // 2. INSIDE CAMPUS - General Campus Area (Not near a specific building)
+  if (isInsideCampus(lat, lng)) {
+    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Anurag University Campus, Ghatkesar`;
+    return;
+  }
+
+  // 3. OUTSIDE CAMPUS - Normal Street Address via Geocoding
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+      headers: { 'Accept-Language': 'en' }
+    });
     const data = await res.json();
-    const addressText = data.display_name || "Address unavailable";
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${addressText}`;
+
+    if (data && data.display_name) {
+      document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${data.display_name}`;
+    } else {
+      document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Outside Campus`;
+    }
   } catch (err) {
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Unable to load address`;
+    console.error('Geocoding fetch error:', err);
+    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Outside Campus Area`;
   }
 }
 
