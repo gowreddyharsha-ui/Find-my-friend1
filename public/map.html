@@ -22,32 +22,50 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body, #map { width: 100%; height: 100%; }
 
+        /* Push Leaflet Zoom Controls to stay neatly at the top left */
+        .leaflet-top.leaflet-left {
+        bottom: 10px !important;
+        right: 10px !important;
+}
+
         /* Centered Search Bar */
         .search-container {
-          position: fixed;
-          top: 20px;
+          position: absolute;
+          top: 50px;
           left: 50%;
           transform: translateX(-50%);
+          width: 92%;
+          max-width: 420px;
+          height: 48px;
           z-index: 10000;
           display: flex;
           align-items: center;
           gap: 10px;
-          width: min(90%, 550px);
           background: #ffffff;
           padding: 8px 16px;
           border-radius: 30px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-
-        .search-icon { flex-shrink: 0; }
+          /* Black/Grey Magnifier Icon */
+        .search-icon { 
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 10px;
+          flex-shrink: 0;
+        }
 
         .search-container input[type="text"] {
-          flex-grow: 1;
+          flex: 1;
           border: none;
           outline: none;
           font-size: 15px;
-          padding: 6px 0;
+          color: #202124;
+          padding: 0 6px ;
           background: transparent;
+        }
+        .search-container input[type="text"]::placeholder {
+         color: #757575;
         }
 
         #search-btn {
@@ -56,23 +74,29 @@
           border: none;
           padding: 6px 14px;
           border-radius: 18px;
+          font-size: 14px;
+          font-weight:600;
           cursor: pointer;
-          font-weight: 500;
+          margin-right: 8px;
+          flex-shrink: 0;
+          transition: background 0.2s;
         }
-
+          .search-container button:hover {
+         background: #1557b0;
+        }
         /* Gmail-style Profile Icon */
         .profile-circle {
-          width: 36px;
+          width: 34px;
           height: 36px;
           border-radius: 50%;
-          background: #1a73e8;
-          color: white;
+          background: #1976d2;
+          color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
           text-decoration: none;
           font-weight: bold;
-          font-size: 16px;
+          font-size: 15px;
           flex-shrink: 0;
           text-transform: uppercase;
           cursor: pointer;
@@ -135,12 +159,15 @@
 
   <!-- Google-Style Top Centered Search Bar -->
   <div class="search-container">
-    <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="#5f6368">
-      <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-    </svg>
-    
-    <input type="text" id="search-input" placeholder="Search friend's username..." />
-    <button id="search-btn">Search</button>
+    <span class="search-icon">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#5f6368" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </span>
+    <!-- Search Input Field -->
+    <input type="text" id="search-input"  class="search-input"placeholder="Search friend's username..." />
+    <button id="search-btn" class="search-action-btn">Search</button>
 
     <!-- Profile Avatar Circle Link (Triggers Settings) -->
     <a href="#" id="profile-link" class="profile-circle" title="Settings">U</a>
@@ -318,16 +345,66 @@ if ('Barometer' in window) {
       });
     }
 
-    // Returns the custom campus location name if within tolerance, otherwise defaults to 'Campus Grounds'
 function getBuildingName(lat, lng) {
-  const TOLERANCE = 0.00035; // ~35m radius match
-  const matched = customLocations.find(loc => {
-    const latDiff = Math.abs(loc.lat - lat);
-    const lngDiff = Math.abs(loc.lng - lng);
-    return latDiff <= TOLERANCE && lngDiff <= TOLERANCE;
-  });
+  const TOLERANCE = 0.00035; // ~35 meters radius check
 
-  return matched ? matched.name : 'Campus Grounds';
+  // Helper function to check if coordinates are close to a target point
+  function isNear(targetLat, targetLng) {
+    return Math.abs(lat - targetLat) <= TOLERANCE && Math.abs(lng - targetLng) <= TOLERANCE;
+  }
+
+  // Academic Blocks
+  if (isNear(17.4221, 78.6562)) {
+    return "Anurag University - A Block";
+  } else if (isNear(17.4223, 78.6565)) {
+    return "Anurag University - B Block";
+  } else if (isNear(17.4225, 78.6568)) {
+    return "Anurag University - C Block";
+  } else if (isNear(17.4228, 78.6570)) {
+    return "Anurag University - D Block";
+  } else if (isNear(17.4230, 78.6573)) {
+    return "Anurag University - E Block";
+  } else if (isNear(17.4232, 78.6576)) {
+    return "Anurag University - F Block";
+  } else if (isNear(17.4235, 78.6578)) {
+    return "Anurag University - G Block";
+  } else if (isNear(17.4237, 78.6581)) {
+    return "Anurag University - H Block";
+  } else if (isNear(17.4240, 78.6584)) {
+    return "Anurag University - I Block";
+
+  // Canteens & Hangouts
+  } else if (isNear(17.4229, 78.6571)) {
+    return "Anurag University - D Block Canteen";
+  } else if (isNear(17.4241, 78.6585)) {
+    return "Anurag University - I Block Canteen";
+  } else if (isNear(17.4226, 78.6566)) {
+    return "Anurag University - Readers";
+
+  // Auditoriums
+  } else if (isNear(17.4224, 78.6564)) {
+    return "Anurag University - A.P.J. Abdul Kalam Auditorium";
+  } else if (isNear(17.4227, 78.6569)) {
+    return "Anurag University - Manas Auditorium";
+  } else if (isNear(17.4236, 78.6579)) {
+    return "Anurag University - Aarambh Auditorium";
+
+  // Sports Facilities
+  } else if (isNear(17.4215, 78.6580)) {
+    return "Anurag University - Sports Complex";
+  } else if (isNear(17.4210, 78.6585)) {
+    return "Anurag University - Cricket Ground";
+  } else if (isNear(17.4218, 78.6582)) {
+    return "Anurag University - Basketball Ground";
+  } else if (isNear(17.4216, 78.6584)) {
+    return "Anurag University - Tennis Ground";
+  } else if (isNear(17.4214, 78.6581)) {
+    return "Anurag University - Badminton Ground";
+
+  // Default fallback if not near any specific block
+  } else {
+    return "Out of Anurag University Campus Grounds";
+  }
 }
 
 // Check if coordinates fall within Anurag University campus boundaries
@@ -391,13 +468,9 @@ async function updateAddress(lat, lng) {
           }
           
                // Calculate dynamic building name
-                  const buildingName = getBuildingName(latitude, longitude);
+            const buildingName = getBuildingName(latitude, longitude);
 
-                     document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-                     document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${buildingName}`;
-                     updateAddress(latitude, longitude);
-
-         
+            document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${buildingName}`;
 
           let estimatedFloor = 'Ground Floor';
           if (altitude !== null && altitude !== undefined) {
