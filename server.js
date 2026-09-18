@@ -33,7 +33,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/findmyfrie
 // instead of a wildcard "*" (which can't be combined with credentials:true
 // anyway — cookies wouldn't be sent cross-origin under a wildcard). Localhost
 // is only allowed when explicitly opted into for development.
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '';
+/*const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '';
 const ALLOW_LOCALHOST_DEV = process.env.ALLOW_LOCALHOST_DEV === 'true';
 
 const allowedOrigins = [];
@@ -52,6 +52,10 @@ const corsOptions = {
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true // required so the browser will send/receive the auth cookie
+};*/
+const corsOptions = {
+  origin: true,
+  credentials: true
 };
 
 const app = express();
