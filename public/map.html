@@ -1,16 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find My Friend</title>
+
     <link rel="manifest" href="manifest.json">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find My Friend</title>
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find My Friend</title>
-    
+
     <!-- App Favicon & Mobile Touch Icon -->
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon.svg">
@@ -18,15 +14,17 @@
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body, #map { width: 100%; height: 100%; }
 
-        /* Push Leaflet Zoom Controls to stay neatly at the top left */
         .leaflet-top.leaflet-left {
-        bottom: 10px !important;
-        right: 10px !important;
-}
+          top: auto !important;
+          left: auto !important;
+          bottom: 100px !important;
+          right: 10px !important;
+        }
 
         /* Centered Search Bar */
         .search-container {
@@ -46,8 +44,8 @@
           border-radius: 30px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-          /* Black/Grey Magnifier Icon */
-        .search-icon { 
+
+        .search-icon {
           display: flex;
           align-items: center;
           justify-content: center;
@@ -61,7 +59,7 @@
           outline: none;
           font-size: 15px;
           color: #202124;
-          padding: 0 6px ;
+          padding: 0 6px;
           background: transparent;
         }
         .search-container input[type="text"]::placeholder {
@@ -81,10 +79,10 @@
           flex-shrink: 0;
           transition: background 0.2s;
         }
-          .search-container button:hover {
+        .search-container button:hover {
          background: #1557b0;
         }
-        /* Gmail-style Profile Icon */
+
         .profile-circle {
           width: 34px;
           height: 36px;
@@ -102,7 +100,6 @@
           cursor: pointer;
         }
 
-        /* Curvy Middle Floating Dialog */
         .center-dialog {
           position: fixed;
           bottom: 20px;
@@ -114,7 +111,7 @@
           padding: 24px;
           border-radius: 20px;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-          display: block;
+          display: none;
         }
 
         .close-btn {
@@ -153,9 +150,43 @@
         #search-results li:hover {
           background-color: #f1f3f4;
         }
+
+        #status-banner {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 10002;
+          background: #fbbc04;
+          color: #202124;
+          text-align: center;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 6px 10px;
+          display: none;
+        }
+        #status-banner.offline { background: #ea4335; color: #fff; }
+
+        #locate-me-btn {
+          position: fixed;
+          bottom: 100px;
+          right: 10px;
+          z-index: 9999;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: none;
+          background: #fff;
+          box-shadow: 0 2px 8px rgba(0,0,0,.3);
+          font-size: 20px;
+          cursor: pointer;
+          display: none;
+        }
     </style>
 </head>
 <body>
+
+  <div id="status-banner"></div>
 
   <!-- Google-Style Top Centered Search Bar -->
   <div class="search-container">
@@ -165,33 +196,33 @@
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
     </span>
-    <!-- Search Input Field -->
-    <input type="text" id="search-input"  class="search-input"placeholder="Search friend's username..." />
+    <input type="text" id="search-input" class="search-input" placeholder="Search friend's username..." />
     <button id="search-btn" class="search-action-btn">Search</button>
-
-    <!-- Profile Avatar Circle Link (Triggers Settings) -->
     <a href="#" id="profile-link" class="profile-circle" title="Settings">U</a>
-
     <ul id="search-results"></ul>
   </div>
 
+  <button id="locate-me-btn" title="My Location">📍</button>
+
   <!-- User Details Dialog Box -->
   <div id="info-dialog" class="center-dialog">
-    <button class="close-btn" onclick="document.getElementById('info-dialog').style.display='none'">&times;</button>
+    <button class="close-btn" onclick="window.__fmfCloseInfoDialog && window.__fmfCloseInfoDialog()">&times;</button>
     <h3>User Location Details</h3>
     <p id="dialog-username"><strong>User:</strong> --</p>
-    <p id="dialog-address"><strong>Address:</strong> Fetching address...</p>
+    <p id="dialog-presence"><strong>Status:</strong> --</p>
+    <p id="dialog-address"><strong>Address:</strong> --</p>
     <p id="dialog-coords"><strong>Coordinates:</strong> --, --</p>
-    <P id="dialog-building"><strong>Building:</strong> --</p>
-    <p id="dialog-floor"><strong>Floor:</strong> Ground Floor</p>
+    <p id="dialog-building"><strong>Building:</strong> --</p>
+    <p id="dialog-floor"><strong>Floor:</strong> --</p>
   </div>
 
   <!-- Settings Dialog (Logout, Manage, Delete) -->
   <div id="settings-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001; background: white; padding: 24px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); min-width: 280px;">
     <button onclick="document.getElementById('settings-dialog').style.display='none'" style="position: absolute; top: 12px; right: 16px; border: none; background: none; font-size: 22px; cursor: pointer; color: #888;">&times;</button>
     <h3 style="margin: 0 0 16px 0; font-size: 18px; color: #333;">Settings</h3>
-    
+
     <div style="display: flex; flex-direction: column; gap: 10px;">
+      <button id="friend-requests-btn" style="padding: 10px; cursor: pointer; border: 1px solid #ccc; background: #f8f9fa; border-radius: 6px; font-weight: bold;">Friend Requests</button>
       <button id="manage-account-btn" style="padding: 10px; cursor: pointer; border: 1px solid #ccc; background: #f8f9fa; border-radius: 6px; font-weight: bold;">Manage Account</button>
       <button id="logout-btn" style="padding: 10px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Log Out</button>
       <hr style="border: 0; border-top: 1px solid #eee; margin: 2px 0;" />
@@ -199,11 +230,18 @@
     </div>
   </div>
 
+  <!-- Friend Requests Modal (new — minimum UI needed for the friend-request system) -->
+  <div id="friends-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10002; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 290px; max-height: 70vh; overflow-y: auto;">
+    <button onclick="document.getElementById('friends-modal').style.display='none'" style="float: right; border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
+    <h3 style="margin-top: 0; margin-bottom: 15px;">Friend Requests</h3>
+    <div id="friend-requests-list" style="font-size: 14px;"></div>
+  </div>
+
   <!-- Manage Account Modal -->
   <div id="manage-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10002; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 290px;">
       <button onclick="document.getElementById('manage-modal').style.display='none'" style="float: right; border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
       <h3 style="margin-top: 0; margin-bottom: 15px;">Manage Account</h3>
-      
+
       <div style="margin-bottom: 15px;">
           <label style="display: block; font-size: 14px; margin-bottom: 5px;">Update Status:</label>
           <input type="text" id="update-status" placeholder="E.g., In class, At the library..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
@@ -217,8 +255,6 @@
       <button id="save-account-btn" style="width: 100%; padding: 10px; cursor: pointer; border: none; background: #28a745; color: white; border-radius: 4px; font-weight: bold;">Save Changes</button>
   </div>
 
-  
-
   <!-- Map Container -->
   <div id="map"></div>
 
@@ -226,269 +262,598 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <!-- Socket.io JS -->
   <script src="/socket.io/socket.io.js"></script>
-  
+
   <script>
+  (function main() {
 
     if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(() => console.log('PWA Service Worker registered'))
-    .catch(err => console.error('Service Worker registration failed:', err));
-}
-
-    // Dictionary of custom coordinates and their custom address names
-const customLocations = [
-  // Academic & Administrative Blocks
-  { lat: 17.4221, lng: 78.6562, name: "Anurag University - A Block" },
-  { lat: 17.4223, lng: 78.6565, name: "Anurag University - B Block" },
-  { lat: 17.4225, lng: 78.6568, name: "Anurag University - C Block" },
-  { lat: 17.4228, lng: 78.6570, name: "Anurag University - D Block" },
-  { lat: 17.4230, lng: 78.6573, name: "Anurag University - E Block" },
-  { lat: 17.4232, lng: 78.6576, name: "Anurag University - F Block" },
-  { lat: 17.4235, lng: 78.6578, name: "Anurag University - G Block" },
-  { lat: 17.4237, lng: 78.6581, name: "Anurag University - H Block" },
-  { lat: 17.4240, lng: 78.6584, name: "Anurag University - I Block" },
-
-  // Canteens & Hangouts
-  { lat: 17.4229, lng: 78.6571, name: "Anurag University - D Block Canteen" },
-  { lat: 17.4241, lng: 78.6585, name: "Anurag University - I Block Canteen" },
-  { lat: 17.4226, lng: 78.6566, name: "Anurag University - Readers" },
-
-  // Auditoriums
-  { lat: 17.4224, lng: 78.6564, name: "Anurag University - A.P.J. Abdul Kalam Auditorium" },
-  { lat: 17.4227, lng: 78.6569, name: "Anurag University - Manas Auditorium" },
-  { lat: 17.4236, lng: 78.6579, name: "Anurag University - Aarambh Auditorium" },
-
-  // Sports Facilities
-  { lat: 17.4215, lng: 78.6580, name: "Anurag University - Sports Complex" },
-  { lat: 17.4210, lng: 78.6585, name: "Anurag University - Cricket Ground" },
-  { lat: 17.4218, lng: 78.6582, name: "Anurag University - Basketball Ground" },
-  { lat: 17.4216, lng: 78.6584, name: "Anurag University - Tennis Ground" },
-  { lat: 17.4214, lng: 78.6581, name: "Anurag University - Badminton Ground" }
-];
-
-    const API_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:5000'
-        : 'https://find-my-friend1.onrender.com';
-        
-    const currentUsername = localStorage.getItem('mapUsername');
-
-    if (!currentUsername) {
-        window.location.href = 'login.html';
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('PWA Service Worker registered'))
+        .catch(err => console.error('Service Worker registration failed:', err));
     }
 
-    const socket = io();
+    const currentUsername = localStorage.getItem('mapUsername');
+    if (!currentUsername) {
+      window.location.href = 'login.html';
+      return;
+    }
 
-    let groundPressure = null;
-let currentFloorName = 'Ground Floor';
+    // CHANGED THIS PASS: relative in production, matching login.html.
+    const API_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000'
+        : '';
 
-if ('Barometer' in window) {
-  try {
-    // Sample barometer once per second (1 Hz)
-    const barometer = new Barometer({ frequency: 1 });
+    // CHANGED THIS PASS: the JWT now lives in an HttpOnly cookie set by the
+    // server (see login.html / server.js) — it is never stored in
+    // localStorage and JS can't read it. Every request just needs
+    // credentials:'include' so the browser attaches the cookie; no
+    // Authorization header to build here anymore.
+    function authHeaders() {
+      return { 'Content-Type': 'application/json' };
+    }
 
-    barometer.addEventListener('reading', () => {
-      const currentPressure = barometer.pressure; // Pressure in hPa
+    function forceLogout() {
+      // Best-effort: ask the server to clear the HttpOnly cookie (JS can't
+      // delete it itself). Don't block the redirect on this.
+      fetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+      localStorage.removeItem('mapUsername');
+      window.location.href = 'login.html';
+    }
 
-      // Set initial ground pressure baseline on first reading
-      if (!groundPressure) {
-        groundPressure = currentPressure;
+    function handleAuthFailure(response) {
+      if (response.status === 401) {
+        forceLogout();
+        return true;
+      }
+      return false;
+    }
+
+    // Verify the cookie session is actually still valid before the rest of
+    // the app relies on it (e.g. after the cookie expired, or the account
+    // was deleted elsewhere). Runs in the background so a transient network
+    // blip doesn't bounce the user to login while genuinely offline.
+    fetch(`${API_URL}/api/auth/me`, { credentials: 'include' })
+      .then((res) => { if (!res.ok) forceLogout(); })
+      .catch(() => { console.warn('Could not verify session right now (offline?) — continuing.'); });
+
+    // -------------------------------------------------------------------
+    // XSS hardening (item 23): every value below can originate from
+    // another user (username, building/floor they reported, a reverse-
+    // geocoded address) and is inserted into innerHTML for styling
+    // convenience (mixed with <strong> tags). escapeHtml() neutralizes
+    // any HTML special characters in the DYNAMIC part before it's
+    // concatenated into the template string.
+    // -------------------------------------------------------------------
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // -------------------------------------------------------------------
+    // Custom Anurag University location data (unchanged names/coordinates).
+    // -------------------------------------------------------------------
+    const customLocations = [
+      { lat: 17.4221, lng: 78.6562, name: "Anurag University - A Block" },
+      { lat: 17.4223, lng: 78.6565, name: "Anurag University - B Block" },
+      { lat: 17.4225, lng: 78.6568, name: "Anurag University - C Block" },
+      { lat: 17.4228, lng: 78.6570, name: "Anurag University - D Block" },
+      { lat: 17.4230, lng: 78.6573, name: "Anurag University - E Block" },
+      { lat: 17.4232, lng: 78.6576, name: "Anurag University - F Block" },
+      { lat: 17.4235, lng: 78.6578, name: "Anurag University - G Block" },
+      { lat: 17.4237, lng: 78.6581, name: "Anurag University - H Block" },
+      { lat: 17.4240, lng: 78.6584, name: "Anurag University - I Block" },
+      { lat: 17.4229, lng: 78.6571, name: "Anurag University - D Block Canteen" },
+      { lat: 17.4241, lng: 78.6585, name: "Anurag University - I Block Canteen" },
+      { lat: 17.4226, lng: 78.6566, name: "Anurag University - Readers" },
+      { lat: 17.4224, lng: 78.6564, name: "Anurag University - A.P.J. Abdul Kalam Auditorium" },
+      { lat: 17.4227, lng: 78.6569, name: "Anurag University - Manas Auditorium" },
+      { lat: 17.4236, lng: 78.6579, name: "Anurag University - Aarambh Auditorium" },
+      { lat: 17.4215, lng: 78.6580, name: "Anurag University - Sports Complex" },
+      { lat: 17.4210, lng: 78.6585, name: "Anurag University - Cricket Ground" },
+      { lat: 17.4218, lng: 78.6582, name: "Anurag University - Basketball Ground" },
+      { lat: 17.4216, lng: 78.6584, name: "Anurag University - Tennis Ground" },
+      { lat: 17.4214, lng: 78.6581, name: "Anurag University - Badminton Ground" }
+    ];
+
+    function haversineMeters(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const toRad = (deg) => deg * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(a));
+    }
+
+    const MAX_BUILDING_DISTANCE_METERS = 25;
+
+    function nearestCustomLocation(lat, lng) {
+      let nearest = null;
+      let nearestDist = Infinity;
+      for (const loc of customLocations) {
+        const d = haversineMeters(lat, lng, loc.lat, loc.lng);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearest = loc;
+        }
+      }
+      return (nearest && nearestDist <= MAX_BUILDING_DISTANCE_METERS) ? nearest.name : null;
+    }
+
+    function isInsideCampus(lat, lng) {
+      const minLat = 17.4180, maxLat = 17.4260;
+      const minLng = 78.6520, maxLng = 78.6620;
+      return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
+    }
+
+    function getBuildingName(lat, lng) {
+      const name = nearestCustomLocation(lat, lng);
+      if (name) return name;
+      return isInsideCampus(lat, lng) ? 'Anurag University Campus, Ghatkesar' : 'Out of Anurag University Campus Grounds';
+    }
+
+    // -------------------------------------------------------------------
+    // Persistent (localStorage) address cache for outside-campus lookups.
+    // -------------------------------------------------------------------
+    const ADDRESS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+    function addressCacheKey(lat, lng) {
+      return `addressCache:${lat.toFixed(3)},${lng.toFixed(3)}`;
+    }
+    function getCachedAddress(lat, lng) {
+      try {
+        const raw = localStorage.getItem(addressCacheKey(lat, lng));
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
+    }
+    function setCachedAddress(lat, lng, address) {
+      try {
+        localStorage.setItem(addressCacheKey(lat, lng), JSON.stringify({ address, cachedAt: Date.now() }));
+      } catch (e) { /* non-fatal */ }
+    }
+
+    let lastAddressCoords = null;
+    let lastAddressResult = null;
+
+    async function updateAddress(lat, lng) {
+      if (lastAddressCoords && lastAddressResult &&
+          haversineMeters(lat, lng, lastAddressCoords.lat, lastAddressCoords.lng) < 5) {
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${escapeHtml(lastAddressResult)}`;
+        return;
       }
 
-      // Standard atmospheric pressure drop: ~0.42 hPa per floor (approx 3.5 meters)
-      const pressureDifference = groundPressure - currentPressure;
-      const calculatedFloor = Math.round(pressureDifference / 0.42);
+      const building = nearestCustomLocation(lat, lng);
+      if (building) {
+        lastAddressCoords = { lat, lng };
+        lastAddressResult = building;
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${escapeHtml(building)}`;
+        return;
+      }
+      if (isInsideCampus(lat, lng)) {
+        lastAddressResult = 'Anurag University Campus, Ghatkesar';
+        lastAddressCoords = { lat, lng };
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${escapeHtml(lastAddressResult)}`;
+        return;
+      }
 
-      if (calculatedFloor <= 0) {
-        currentFloorName = 'Ground Floor';
+      const cached = getCachedAddress(lat, lng);
+
+      if (!navigator.onLine) {
+        document.getElementById('dialog-address').innerHTML = cached
+          ? `<strong>Address:</strong> ${escapeHtml(cached.address)} (cached — offline)`
+          : `<strong>Address:</strong> Address unavailable (offline)`;
+        return;
+      }
+
+      if (cached && (Date.now() - cached.cachedAt) < ADDRESS_CACHE_MAX_AGE_MS) {
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${escapeHtml(cached.address)}`;
       } else {
-        currentFloorName = `Floor ${calculatedFloor}`;
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Looking up address...`;
       }
 
-      // Update dialog display in real time
-      const floorElem = document.getElementById('dialog-floor');
-      if (floorElem) {
-        floorElem.innerHTML = `<strong>Floor:</strong> ${currentFloorName} (${currentPressure.toFixed(2)} hPa)`;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+          headers: { 'Accept-Language': 'en' }
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const data = await res.json();
+        lastAddressResult = (data && data.display_name) ? data.display_name : 'Outside Campus';
+        lastAddressCoords = { lat, lng };
+        setCachedAddress(lat, lng, lastAddressResult);
+        document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${escapeHtml(lastAddressResult)}`;
+      } catch (err) {
+        console.error('Geocoding fetch error:', err);
+        document.getElementById('dialog-address').innerHTML = cached
+          ? `<strong>Address:</strong> ${escapeHtml(cached.address)} (cached — lookup failed)`
+          : `<strong>Address:</strong> Outside Campus Area (lookup failed)`;
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // Local "last known friend" cache
+    // -------------------------------------------------------------------
+    function cacheFriendData(user) {
+      try {
+        localStorage.setItem(`friendCache:${user.username}`, JSON.stringify({
+          location: user.location,
+          status: user.status,
+          cachedAt: Date.now()
+        }));
+      } catch (e) { /* non-fatal */ }
+    }
+    function findCachedFriendsMatching(query) {
+      const q = query.toLowerCase();
+      const matches = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('friendCache:')) {
+          const username = key.substring('friendCache:'.length);
+          if (username.toLowerCase().includes(q)) {
+            try {
+              matches.push({ username, data: JSON.parse(localStorage.getItem(key)) });
+            } catch (e) { /* skip malformed entry */ }
+          }
+        }
+      }
+      return matches;
+    }
+
+    // -------------------------------------------------------------------
+    // Connection status banner
+    // -------------------------------------------------------------------
+    function setConnectionStatus(state) {
+      const el = document.getElementById('status-banner');
+      if (!el) return;
+      if (state === 'online') {
+        el.style.display = 'none';
+        el.classList.remove('offline');
+      } else if (state === 'offline') {
+        el.textContent = 'Connection lost — showing last known data';
+        el.classList.add('offline');
+        el.style.display = 'block';
+      } else if (state === 'reconnecting') {
+        el.textContent = 'Reconnecting...';
+        el.classList.remove('offline');
+        el.style.display = 'block';
+      } else if (state === 'server-down') {
+        el.textContent = 'Server unavailable — retrying...';
+        el.classList.add('offline');
+        el.style.display = 'block';
+      }
+    }
+
+    window.addEventListener('offline', () => setConnectionStatus('offline'));
+    window.addEventListener('online', () => { if (socket.connected) setConnectionStatus('online'); });
+
+    // -------------------------------------------------------------------
+    // Socket.IO connection
+    //
+    // CHANGED THIS PASS: the handshake now authenticates via the HttpOnly
+    // cookie (withCredentials sends it automatically, including on every
+    // reconnect attempt) instead of a client-supplied token. The old
+    // `auth` callback is gone — there's no token in JS to hand it anymore.
+    // -------------------------------------------------------------------
+    const socket = io(API_URL || undefined, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000
+    });
+
+    const AUTH_FAILURE_MESSAGES = new Set([
+      'Authentication required',
+      'Invalid authentication token',
+      'Invalid or expired authentication token',
+      'Account no longer exists'
+    ]);
+
+    socket.on('connect', () => {
+      setConnectionStatus('online');
+      flushPendingLocation();
+      // Re-subscribing here (rather than assuming the server remembered)
+      // is what makes reconnect: re-authenticate + restore subscription +
+      // fetch the latest friend location all work together — the server's
+      // subscribe_friend handler re-checks friendship and immediately
+      // replies with that friend's current location/presence.
+      if (currentFriendUsername) {
+        socket.emit('subscribe_friend', currentFriendUsername);
+      }
+    });
+    socket.on('disconnect', () => setConnectionStatus('offline'));
+    socket.io.on('reconnect_attempt', () => setConnectionStatus('reconnecting'));
+    socket.on('connect_error', (err) => {
+      console.warn('Socket connect error:', err.message);
+      if (AUTH_FAILURE_MESSAGES.has(err.message)) {
+        forceLogout();
+        return;
+      }
+      setConnectionStatus('server-down');
+    });
+    socket.on('subscribe_denied', ({ username, message }) => {
+      console.warn('Subscription denied:', message);
+      if (username === currentFriendUsername) {
+        showFriendUnavailable(username);
+        currentFriendUsername = null;
       }
     });
 
-    barometer.addEventListener('error', event => {
-      console.warn('Barometer error:', event.error.name, event.error.message);
-    });
+    // CHANGED THIS PASS: "pending" is now only cleared once the server acks
+    // that it actually wrote the location to the database — not merely
+    // once it was emitted. If the ack never arrives (dropped connection
+    // mid-flight, server error), the pending entry is left in place so the
+    // next reconnect/GPS tick retries it. Still strictly "latest wins": a
+    // newer position always overwrites the pending entry outright.
+    function queueLocationForSync(payload) {
+      localStorage.setItem('pendingLocationUpdate', JSON.stringify(payload));
+    }
 
-    barometer.start();
-  } catch (err) {
-    console.error('Barometer initialization failed:', err);
-  }
-} else {
-  alert('Barometer API is not supported on this browser or needs chrome://flags enabled.');
-}
+    function sendLocationUpdate(payload) {
+      if (!socket.connected) {
+        queueLocationForSync(payload);
+        return;
+      }
 
-    // Initialize map
-    const map = L.map('map').setView([0, 0], 2);
+      let settled = false;
+      const timeoutId = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        console.warn('No confirmation for location update yet; keeping it queued for retry.');
+        queueLocationForSync(payload);
+      }, 8000);
 
-    // Add Esri satellite tiles
+      socket.emit('update_location', payload, (ack) => {
+        if (settled) return; // timed out already; a late ack changes nothing
+        settled = true;
+        clearTimeout(timeoutId);
+
+        if (!ack || !ack.success) {
+          console.warn('Server did not confirm location update:', ack);
+          queueLocationForSync(payload);
+          return;
+        }
+
+        // Confirmed stored — clear the pending entry, but only if it still
+        // matches this exact update (a newer one may have queued meanwhile).
+        const stillPending = localStorage.getItem('pendingLocationUpdate');
+        if (stillPending) {
+          try {
+            const parsed = JSON.parse(stillPending);
+            if (parsed.latitude === payload.latitude && parsed.longitude === payload.longitude) {
+              localStorage.removeItem('pendingLocationUpdate');
+            }
+          } catch (e) {
+            localStorage.removeItem('pendingLocationUpdate');
+          }
+        }
+      });
+    }
+
+    function flushPendingLocation() {
+      const pending = localStorage.getItem('pendingLocationUpdate');
+      if (!pending || !socket.connected) return;
+      try {
+        sendLocationUpdate(JSON.parse(pending));
+      } catch (err) {
+        localStorage.removeItem('pendingLocationUpdate'); // malformed entry — nothing useful to retry
+      }
+    }
+
+    let lastEmitted = null;
+    const MIN_EMIT_INTERVAL_MS = 4000;
+    const MIN_EMIT_DISTANCE_M = 8;
+    const FORCE_EMIT_AFTER_MS = 30000;
+
+    function shouldEmitUpdate(lat, lng) {
+      if (!lastEmitted) return true;
+      const timeSince = Date.now() - lastEmitted.time;
+      if (timeSince > FORCE_EMIT_AFTER_MS) return true;
+      if (timeSince < MIN_EMIT_INTERVAL_MS) return false;
+      return haversineMeters(lat, lng, lastEmitted.lat, lastEmitted.lng) >= MIN_EMIT_DISTANCE_M;
+    }
+
+    // -------------------------------------------------------------------
+    // Floor detection
+    // -------------------------------------------------------------------
+    let currentFloorName = 'Ground Floor';
+    let floorSource = 'default';
+
+    if (typeof Barometer !== 'undefined') {
+      try {
+        let groundPressure = null;
+        const barometer = new Barometer({ frequency: 1 });
+
+        barometer.addEventListener('reading', () => {
+          const currentPressure = barometer.pressure;
+          if (!groundPressure) groundPressure = currentPressure;
+
+          const pressureDifference = groundPressure - currentPressure;
+          const calculatedFloor = Math.round(pressureDifference / 0.42);
+          currentFloorName = calculatedFloor > 0 ? `Floor ${calculatedFloor}` : 'Ground Floor';
+        });
+        barometer.addEventListener('error', (event) => {
+          console.warn('Barometer error:', event.error && event.error.message);
+        });
+        barometer.start();
+        floorSource = 'barometer';
+      } catch (err) {
+        console.warn('Barometer unavailable, falling back:', err.message);
+      }
+    } else {
+      console.info('Barometer API not supported on this browser; using fallback floor detection.');
+    }
+
+    function estimateFloorFromAltitude(altitude) {
+      if (typeof altitude !== 'number' || altitude === null) return 'Ground Floor';
+      if (altitude < -5 || altitude > 60) return 'Ground Floor';
+      const floorNum = Math.round(altitude / 3.5);
+      return floorNum > 0 ? `Floor ${floorNum}` : 'Ground Floor';
+    }
+
+    // -------------------------------------------------------------------
+    // Map setup
+    // -------------------------------------------------------------------
+    const map = L.map('map').setView([17.4225, 78.6570], 16);
+
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 21,
         maxNativeZoom: 17,
         attribution: 'Tiles &copy; Esri'
     }).addTo(map);
 
-    let userMarker;
+    document.getElementById('locate-me-btn').style.display = 'block';
 
-    // Set Profile Circle Initial & Open Settings on Click
+    let userMarker = null;
+    let friendMarker = null;
+    let currentFriendUsername = null;
+    let followMe = true;
+    let lastKnownSelf = null;
+
+    map.on('dragstart', () => { followMe = false; });
+
+    document.getElementById('locate-me-btn').addEventListener('click', () => {
+      followMe = true;
+      if (currentFriendUsername) {
+        socket.emit('unsubscribe_friend');
+        currentFriendUsername = null;
+      }
+      if (lastKnownSelf) {
+        map.setView([lastKnownSelf.lat, lastKnownSelf.lng], 17);
+      }
+    });
+
     const profileLink = document.getElementById('profile-link');
     if (profileLink) {
-      profileLink.innerText = currentUsername.charAt(0).toUpperCase();
+      profileLink.innerText = currentUsername.charAt(0).toUpperCase(); // innerText, not innerHTML — safe by construction
       profileLink.addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('settings-dialog').style.display = 'block';
       });
     }
 
-function getBuildingName(lat, lng) {
-  const TOLERANCE = 0.00035; // ~35 meters radius check
+    window.__fmfCloseInfoDialog = function () {
+      document.getElementById('info-dialog').style.display = 'none';
+      if (currentFriendUsername) {
+        socket.emit('unsubscribe_friend');
+        currentFriendUsername = null;
+      }
+    };
 
-  // Helper function to check if coordinates are close to a target point
-  function isNear(targetLat, targetLng) {
-    return Math.abs(lat - targetLat) <= TOLERANCE && Math.abs(lng - targetLng) <= TOLERANCE;
-  }
-
-  // Academic Blocks
-  if (isNear(17.4221, 78.6562)) {
-    return "Anurag University - A Block";
-  } else if (isNear(17.4223, 78.6565)) {
-    return "Anurag University - B Block";
-  } else if (isNear(17.4225, 78.6568)) {
-    return "Anurag University - C Block";
-  } else if (isNear(17.4228, 78.6570)) {
-    return "Anurag University - D Block";
-  } else if (isNear(17.4230, 78.6573)) {
-    return "Anurag University - E Block";
-  } else if (isNear(17.4232, 78.6576)) {
-    return "Anurag University - F Block";
-  } else if (isNear(17.4235, 78.6578)) {
-    return "Anurag University - G Block";
-  } else if (isNear(17.4237, 78.6581)) {
-    return "Anurag University - H Block";
-  } else if (isNear(17.4240, 78.6584)) {
-    return "Anurag University - I Block";
-
-  // Canteens & Hangouts
-  } else if (isNear(17.4229, 78.6571)) {
-    return "Anurag University - D Block Canteen";
-  } else if (isNear(17.4241, 78.6585)) {
-    return "Anurag University - I Block Canteen";
-  } else if (isNear(17.4226, 78.6566)) {
-    return "Anurag University - Readers";
-
-  // Auditoriums
-  } else if (isNear(17.4224, 78.6564)) {
-    return "Anurag University - A.P.J. Abdul Kalam Auditorium";
-  } else if (isNear(17.4227, 78.6569)) {
-    return "Anurag University - Manas Auditorium";
-  } else if (isNear(17.4236, 78.6579)) {
-    return "Anurag University - Aarambh Auditorium";
-
-  // Sports Facilities
-  } else if (isNear(17.4215, 78.6580)) {
-    return "Anurag University - Sports Complex";
-  } else if (isNear(17.4210, 78.6585)) {
-    return "Anurag University - Cricket Ground";
-  } else if (isNear(17.4218, 78.6582)) {
-    return "Anurag University - Basketball Ground";
-  } else if (isNear(17.4216, 78.6584)) {
-    return "Anurag University - Tennis Ground";
-  } else if (isNear(17.4214, 78.6581)) {
-    return "Anurag University - Badminton Ground";
-
-  // Default fallback if not near any specific block
-  } else {
-    return "Out of Anurag University Campus Grounds";
-  }
-}
-
-// Check if coordinates fall within Anurag University campus boundaries
-function isInsideCampus(lat, lng) {
-  const minLat = 17.4180, maxLat = 17.4260;
-  const minLng = 78.6520, maxLng = 78.6620;
-  return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng;
-}
-
-// Dynamic Address Resolver
-async function updateAddress(lat, lng) {
-  const TOLERANCE = 0.00045; // ~45m check for specific buildings
-
-  // 1. INSIDE CAMPUS - Match Specific Custom Building
-  const matchedBuilding = customLocations.find(loc => {
-    return Math.abs(loc.lat - lat) <= TOLERANCE && Math.abs(loc.lng - lng) <= TOLERANCE;
-  });
-
-  if (matchedBuilding) {
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${matchedBuilding.name}`;
-    return;
-  }
-
-  // 2. INSIDE CAMPUS - General Campus Area (Not near a specific building)
-  if (isInsideCampus(lat, lng)) {
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Anurag University Campus, Ghatkesar`;
-    return;
-  }
-
-  // 3. OUTSIDE CAMPUS - Normal Street Address via Geocoding
-  try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-      headers: { 'Accept-Language': 'en' }
-    });
-    const data = await res.json();
-
-    if (data && data.display_name) {
-      document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> ${data.display_name}`;
-    } else {
-      document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Outside Campus`;
+    // -------------------------------------------------------------------
+    // Friend info dialog helpers
+    // -------------------------------------------------------------------
+    function presenceLabel(online, cached) {
+      if (cached) return '⚪ Offline (showing cached data)';
+      return online ? '🟢 Live' : '⚪ Last seen (not currently connected)';
     }
-  } catch (err) {
-    console.error('Geocoding fetch error:', err);
-    document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> Outside Campus Area`;
-  }
-}
 
+    function showFriendOnMap(user, opts) {
+      opts = opts || {};
+      const { latitude, longitude, building, floor, updatedAt } = user.location;
 
-    // Geolocation Watcher
+      if (friendMarker) {
+        friendMarker.setLatLng([latitude, longitude]);
+      } else {
+        friendMarker = L.marker([latitude, longitude]).addTo(map);
+      }
+      // Leaflet's bindPopup renders string content as HTML, so the
+      // username (which came from another user's account) is escaped
+      // before being handed to it.
+      friendMarker.bindPopup(escapeHtml(user.username)).openPopup();
+      map.setView([latitude, longitude], 16);
+
+      document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${escapeHtml(user.username)}`;
+      document.getElementById('dialog-presence').innerHTML = `<strong>Status:</strong> ${escapeHtml(presenceLabel(!!user.online, !!opts.cached))}`;
+      document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+      document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${escapeHtml(building || 'Unknown')}`;
+
+      const isStale = !opts.cached && (!updatedAt || (Date.now() - new Date(updatedAt).getTime() > 5 * 60 * 1000));
+      const updatedLabel = opts.cached
+        ? `${new Date(opts.cachedAt).toLocaleString()} (cached)`
+        : (updatedAt ? new Date(updatedAt).toLocaleString() : 'Unknown');
+      document.getElementById('dialog-floor').innerHTML =
+        `<strong>Floor:</strong> ${escapeHtml(floor || 'Ground Floor')} &nbsp;|&nbsp; <strong>${isStale || opts.cached ? 'Last known update' : 'Updated'}:</strong> ${escapeHtml(updatedLabel)}`;
+
+      document.getElementById('info-dialog').style.display = 'block';
+      updateAddress(latitude, longitude);
+
+      if (!opts.cached) {
+        cacheFriendData(user);
+        if (socket.connected) {
+          socket.emit('subscribe_friend', user.username);
+        }
+      }
+    }
+
+    function showFriendUnavailable(username) {
+      document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${escapeHtml(username)}`;
+      document.getElementById('dialog-presence').innerHTML = `<strong>Status:</strong> --`;
+      document.getElementById('dialog-address').innerHTML = `<strong>Address:</strong> --`;
+      document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> --, --`;
+      document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> --`;
+      document.getElementById('dialog-floor').innerHTML = `<strong>Floor:</strong> Location currently unavailable`;
+      document.getElementById('info-dialog').style.display = 'block';
+    }
+
+    // -------------------------------------------------------------------
+    // Geolocation watcher (own position)
+    //
+    // CHANGED THIS PASS: the emitted payload no longer includes
+    // `username` at all — the server determines identity purely from
+    // socket.username (set during the authenticated handshake).
+    // -------------------------------------------------------------------
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
-        position => {
+        (position) => {
           const { latitude, longitude, altitude } = position.coords;
-
-          map.setView([latitude, longitude], 17);
+          lastKnownSelf = { lat: latitude, lng: longitude };
 
           if (!userMarker) {
-              userMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('You are here').openPopup();
+            userMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('You are here');
           } else {
-              userMarker.setLatLng([latitude, longitude]);
-          }
-          
-               // Calculate dynamic building name
-            const buildingName = getBuildingName(latitude, longitude);
-
-            document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${buildingName}`;
-
-          let estimatedFloor = 'Ground Floor';
-          if (altitude !== null && altitude !== undefined) {
-              const floorNum = Math.floor(altitude / 3.5);
-              estimatedFloor = floorNum > 0 ? `Floor ${floorNum}` : 'Ground Floor';
+            userMarker.setLatLng([latitude, longitude]);
           }
 
-          socket.emit('update_location', { 
-              username: currentUsername, 
-              latitude: latitude, 
-              longitude: longitude, 
-              floor: currentFloorName,
-              building: buildingName
-          });
+          if (followMe) {
+            map.setView([latitude, longitude], 17);
+          }
+
+          const buildingName = getBuildingName(latitude, longitude);
+          if (floorSource !== 'barometer') {
+            currentFloorName = estimateFloorFromAltitude(altitude);
+          }
+
+          const payload = {
+            latitude,
+            longitude,
+            floor: currentFloorName,
+            building: buildingName
+          };
+
+          if (!socket.connected) {
+            // Always keep the newest fix while offline — the throttle
+            // below is for pacing live socket emissions, not for deciding
+            // whether the offline "latest wins" queue gets updated.
+            queueLocationForSync(payload);
+          } else if (shouldEmitUpdate(latitude, longitude)) {
+            sendLocationUpdate(payload);
+            lastEmitted = { lat: latitude, lng: longitude, time: Date.now() };
+          }
         },
-        err => {
+        (err) => {
           console.error('Geolocation error:', err.message);
-          alert(`Location Error (${err.code}): ${err.message}`);
+          const el = document.getElementById('status-banner');
+          if (el) {
+            el.textContent = 'Location unavailable — check GPS permissions';
+            el.classList.add('offline');
+            el.style.display = 'block';
+          }
         },
         {
           enableHighAccuracy: false,
@@ -496,156 +861,360 @@ async function updateAddress(lat, lng) {
           maximumAge: 5000
         }
       );
+    } else {
+      const el = document.getElementById('status-banner');
+      if (el) {
+        el.textContent = 'Geolocation is not supported by your browser.';
+        el.classList.add('offline');
+        el.style.display = 'block';
+      }
     }
 
-      else {
-        alert('Geolocation is not supported by your browser.');
-      }
-
-    // Settings Modal Handlers
+    // -------------------------------------------------------------------
+    // Settings / account management
+    // -------------------------------------------------------------------
     document.getElementById('manage-account-btn').addEventListener('click', () => {
-        document.getElementById('manage-modal').style.display = 'block';
-        document.getElementById('settings-dialog').style.display = 'none';
+      document.getElementById('manage-modal').style.display = 'block';
+      document.getElementById('settings-dialog').style.display = 'none';
     });
+
+    document.getElementById('friend-requests-btn').addEventListener('click', async () => {
+      document.getElementById('settings-dialog').style.display = 'none';
+      document.getElementById('friends-modal').style.display = 'block';
+      await loadFriendRequests();
+    });
+
+    async function loadFriendRequests() {
+      const listEl = document.getElementById('friend-requests-list');
+      listEl.textContent = 'Loading...';
+      try {
+        const res = await fetch(`${API_URL}/api/friends`, { headers: authHeaders(), credentials: 'include' });
+        if (handleAuthFailure(res)) return;
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        const data = await res.json();
+
+        listEl.innerHTML = '';
+        if (!data.incomingRequests || data.incomingRequests.length === 0) {
+          const empty = document.createElement('p');
+          empty.style.cssText = 'font-size:13px;color:#777;margin:0;';
+          empty.textContent = 'No pending requests';
+          listEl.appendChild(empty);
+          return;
+        }
+
+        data.incomingRequests.forEach((fromUsername) => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #eee;';
+
+          const nameEl = document.createElement('span');
+          nameEl.textContent = fromUsername; // textContent — safe by construction
+          row.appendChild(nameEl);
+
+          const btnGroup = document.createElement('div');
+
+          const acceptBtn = document.createElement('button');
+          acceptBtn.textContent = 'Accept';
+          acceptBtn.style.cssText = 'margin-right:6px;border:none;background:#28a745;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:12px;';
+          acceptBtn.addEventListener('click', async () => {
+            acceptBtn.disabled = true;
+            if (await respondToFriendRequest(fromUsername, 'accept')) loadFriendRequests();
+            else acceptBtn.disabled = false;
+          });
+
+          const rejectBtn = document.createElement('button');
+          rejectBtn.textContent = 'Reject';
+          rejectBtn.style.cssText = 'border:none;background:#dc3545;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:12px;';
+          rejectBtn.addEventListener('click', async () => {
+            rejectBtn.disabled = true;
+            if (await respondToFriendRequest(fromUsername, 'reject')) loadFriendRequests();
+            else rejectBtn.disabled = false;
+          });
+
+          btnGroup.appendChild(acceptBtn);
+          btnGroup.appendChild(rejectBtn);
+          row.appendChild(btnGroup);
+          listEl.appendChild(row);
+        });
+      } catch (err) {
+        console.error('Friend requests load error:', err);
+        listEl.textContent = 'Could not load requests — check your connection';
+      }
+    }
 
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('mapUsername');
-        window.location.href = 'login.html';
+        socket.disconnect();
+        forceLogout();
       });
     }
 
-   // Delete Account Handler
-document.getElementById('delete-account-btn').addEventListener('click', async () => {
-    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
+    document.getElementById('delete-account-btn').addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
 
-    try {
-        const response = await fetch('/delete-account', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: currentUsername })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Server returned HTTP status ${response.status}`);
-        }
+      try {
+        const response = await fetch('/delete-account', { method: 'POST', headers: authHeaders(), credentials: 'include' });
+        if (handleAuthFailure(response)) return;
+        if (!response.ok) throw new Error(`Server returned HTTP status ${response.status}`);
 
         const result = await response.json();
         if (result.success) {
-            alert('Your account has been deleted successfully.');
-            localStorage.removeItem('mapUsername');
-            window.location.href = 'login.html';
+          alert('Your account has been deleted successfully.');
+          socket.disconnect();
+          forceLogout();
         } else {
-            alert(result.message || 'Error deleting account.');
+          alert(result.message || 'Error deleting account.');
         }
-    } catch (err) {
+      } catch (err) {
         console.error('Delete error:', err.message);
-        alert('Could not connect to server or endpoint missing.');
-    }
-});
+        alert('Could not connect to server. Please try again once your connection is back.');
+      }
+    });
 
-// Save Account Changes Handler
-document.getElementById('save-account-btn').addEventListener('click', async () => {
-    const newStatus = document.getElementById('update-status').value.trim();
-    const newPassword = document.getElementById('update-password').value.trim();
+    document.getElementById('save-account-btn').addEventListener('click', async () => {
+      const newStatus = document.getElementById('update-status').value.trim();
+      const newPassword = document.getElementById('update-password').value.trim();
 
-    if (!newStatus && !newPassword) {
+      if (!newStatus && !newPassword) {
         alert('Please enter a new status or password to update.');
         return;
-    }
+      }
 
-    try {
+      try {
         const response = await fetch('/update-account', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                username: currentUsername,
-                status: newStatus,
-                password: newPassword
-            })
+          method: 'POST',
+          headers: authHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({ status: newStatus, password: newPassword })
         });
-
-        if (!response.ok) {
-            throw new Error(`Server returned HTTP status ${response.status}`);
-        }
+        if (handleAuthFailure(response)) return;
+        if (!response.ok) throw new Error(`Server returned HTTP status ${response.status}`);
 
         const result = await response.json();
         if (result.success) {
-            alert('Account updated successfully!');
-            document.getElementById('manage-modal').style.display = 'none';
-            document.getElementById('update-status').value = '';
-            document.getElementById('update-password').value = '';
+          alert('Account updated successfully!');
+          document.getElementById('manage-modal').style.display = 'none';
+          document.getElementById('update-status').value = '';
+          document.getElementById('update-password').value = '';
         } else {
-            alert(result.message || 'Error updating account.');
+          alert(result.message || 'Error updating account.');
         }
-    } catch (err) {
+      } catch (err) {
         console.error('Update error:', err.message);
-        alert('Could not connect to server or endpoint missing.');
+        alert('Could not connect to server. Please try again once your connection is back.');
+      }
+    });
+
+    // -------------------------------------------------------------------
+    // Friend request helpers (new this pass — minimum viable friend system)
+    // -------------------------------------------------------------------
+    async function sendFriendRequest(username) {
+      try {
+        const res = await fetch(`${API_URL}/api/friends/request`, {
+          method: 'POST',
+          headers: authHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({ username })
+        });
+        if (handleAuthFailure(res)) return false;
+        const data = await res.json();
+        if (!data.success) alert(data.message || 'Could not send friend request');
+        return !!data.success;
+      } catch (err) {
+        alert('Could not send friend request — check your connection');
+        return false;
+      }
     }
-});
-            
-    // Search Button Click Listener
-    document.getElementById('search-btn').addEventListener('click', async () => {
-        const query = document.getElementById('search-input').value.trim();
-        const resultsList = document.getElementById('search-results');
+
+    async function respondToFriendRequest(username, action) {
+      try {
+        const res = await fetch(`${API_URL}/api/friends/${action}`, {
+          method: 'POST',
+          headers: authHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({ username })
+        });
+        if (handleAuthFailure(res)) return false;
+        const data = await res.json();
+        if (!data.success) alert(data.message || 'Could not update friend request');
+        return !!data.success;
+      } catch (err) {
+        alert('Could not update friend request — check your connection');
+        return false;
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // Friend search
+    //
+    // CHANGED THIS PASS (privacy fix): the server now only includes
+    // location for accepted friends, and adds isFriend/requestSent/
+    // requestReceived flags. A search result you're not friends with shows
+    // an Add Friend / Pending / Accept action instead of ever exposing
+    // their coordinates.
+    // -------------------------------------------------------------------
+    async function performSearch() {
+      const query = document.getElementById('search-input').value.trim();
+      const resultsList = document.getElementById('search-results');
+      resultsList.innerHTML = '';
+      if (!query) return;
+
+      resultsList.innerHTML = '<li>Searching...</li>';
+
+      try {
+        const url = `${API_URL}/api/search?username=${encodeURIComponent(query)}`;
+        const response = await fetch(url, { headers: authHeaders(), credentials: 'include' });
+        if (handleAuthFailure(response)) return;
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+        const users = await response.json();
+
         resultsList.innerHTML = '';
+        if (!users || users.length === 0) {
+          resultsList.innerHTML = '<li>No users found</li>';
+          return;
+        }
 
-        if (!query) return;
+        users.forEach((user) => {
+          const li = document.createElement('li');
+          li.style.display = 'flex';
+          li.style.justifyContent = 'space-between';
+          li.style.alignItems = 'center';
+          li.style.gap = '8px';
 
-        try {
-            const response = await fetch(`${API_URL}/api/search?username=${query}&currentUser=${currentUsername}`);
-            const users = await response.json();
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = `${user.username} ${user.online ? '🟢' : ''}`; // textContent — safe by construction
+          li.appendChild(nameSpan);
 
-            if (!users || users.length === 0) {
-                resultsList.innerHTML = '<li>No users found</li>';
-                return;
+          if (user.isFriend) {
+            li.style.cursor = 'pointer';
+            li.addEventListener('click', () => {
+              followMe = false;
+              if (currentFriendUsername && currentFriendUsername !== user.username) {
+                socket.emit('unsubscribe_friend');
+              }
+              currentFriendUsername = user.username;
+
+              const loc = user.location;
+              if (loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number') {
+                showFriendOnMap(user);
+              } else {
+                showFriendUnavailable(user.username);
+              }
+
+              resultsList.innerHTML = '';
+              document.getElementById('search-input').value = '';
+            });
+          } else {
+            const actionBtn = document.createElement('button');
+            actionBtn.style.cssText = 'border:none;border-radius:12px;padding:4px 10px;font-size:12px;cursor:pointer;flex-shrink:0;';
+
+            if (user.requestReceived) {
+              actionBtn.textContent = 'Accept';
+              actionBtn.style.background = '#28a745';
+              actionBtn.style.color = '#fff';
+              actionBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                actionBtn.disabled = true;
+                if (await respondToFriendRequest(user.username, 'accept')) performSearch();
+              });
+            } else if (user.requestSent) {
+              actionBtn.textContent = 'Pending';
+              actionBtn.disabled = true;
+              actionBtn.style.background = '#e0e0e0';
+              actionBtn.style.color = '#666';
+              actionBtn.style.cursor = 'default';
+            } else {
+              actionBtn.textContent = 'Add Friend';
+              actionBtn.style.background = '#1a73e8';
+              actionBtn.style.color = '#fff';
+              actionBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                actionBtn.disabled = true;
+                if (await sendFriendRequest(user.username)) performSearch();
+                else actionBtn.disabled = false;
+              });
             }
 
-            users.forEach(user => {
-                const li = document.createElement('li');
-                li.textContent = user.username;
+            li.appendChild(actionBtn);
+          }
 
-                li.addEventListener('click', () => {
-                    if (user.location && user.location.coordinates) {
-                        const [lng, lat] = user.location.coordinates;
-                        
-                        map.setView([lat, lng], 16);
-                        L.marker([lat, lng]).addTo(map).bindPopup(user.username).openPopup();
+          resultsList.appendChild(li);
+        });
+      } catch (err) {
+        console.error('Search error:', err);
 
-                        const infoDialog = document.getElementById('info-dialog');
-                        document.getElementById('dialog-username').innerHTML = `<strong>User:</strong> ${user.username}`;
-                        document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                        document.getElementById('dialog-floor').innerHTML = `<strong>Building:</strong> ${user.location.building || 'Main Block'} | <strong>Floor:</strong> ${user.location.floor || 'Ground Floor'}`;
-                         
-                        infoDialog.style.display = 'block';
-                        updateAddress(lat, lng);
-
-                        resultsList.innerHTML = '';
-                        document.getElementById('search-input').value = '';
-                    } else {
-                        alert(`${user.username}'s location is currently unavailable.`);
-                    }
-                });
-
-                resultsList.appendChild(li);
+        const cachedMatches = findCachedFriendsMatching(query);
+        if (cachedMatches.length > 0) {
+          resultsList.innerHTML = '';
+          cachedMatches.forEach(({ username, data }) => {
+            const li = document.createElement('li');
+            li.textContent = `${username} (cached — offline)`;
+            li.addEventListener('click', () => {
+              followMe = false;
+              if (currentFriendUsername) socket.emit('unsubscribe_friend');
+              currentFriendUsername = null; // cached view isn't live-subscribed
+              if (data.location && typeof data.location.latitude === 'number') {
+                showFriendOnMap(
+                  { username, location: data.location, status: data.status },
+                  { cached: true, cachedAt: data.cachedAt }
+                );
+              } else {
+                showFriendUnavailable(username);
+              }
+              resultsList.innerHTML = '';
+              document.getElementById('search-input').value = '';
             });
-        } catch (err) {
-            console.error('Search error:', err);
-        }
-    });
-
-    const markers = {};
-
-    socket.on("receive-location", (data) => {
-        const { id, latitude, longitude } = data;
-        map.setView([latitude, longitude]);
-        if (markers[id]) {
-            markers[id].setLatLng([latitude, longitude]);
+            resultsList.appendChild(li);
+          });
         } else {
-            markers[id] = L.marker([latitude, longitude]).addTo(map).bindPopup(currentUsername).openPopup();
+          resultsList.innerHTML = '<li>Search unavailable — check your connection</li>';
         }
+      }
+    }
+
+    document.getElementById('search-btn').addEventListener('click', performSearch);
+    document.getElementById('search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        performSearch();
+      }
     });
+
+    // -------------------------------------------------------------------
+    // Real-time friend updates — server only sends these to sockets that
+    // called subscribe_friend for this exact username.
+    // -------------------------------------------------------------------
+    socket.on('location_update', (data) => {
+      const { username, location } = data || {};
+      if (!location || username !== currentFriendUsername) return;
+
+      if (friendMarker) {
+        friendMarker.setLatLng([location.latitude, location.longitude]);
+      } else {
+        friendMarker = L.marker([location.latitude, location.longitude]).addTo(map);
+      }
+      friendMarker.bindPopup(escapeHtml(username));
+
+      document.getElementById('dialog-coords').innerHTML = `<strong>Coordinates:</strong> ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`;
+      document.getElementById('dialog-building').innerHTML = `<strong>Building:</strong> ${escapeHtml(location.building || 'Unknown')}`;
+      document.getElementById('dialog-floor').innerHTML =
+        `<strong>Floor:</strong> ${escapeHtml(location.floor || 'Ground Floor')} &nbsp;|&nbsp; <strong>Updated:</strong> ${escapeHtml(new Date(location.updatedAt).toLocaleString())}`;
+
+      cacheFriendData({ username, location, status: undefined });
+      updateAddress(location.latitude, location.longitude);
+    });
+
+    socket.on('presence_update', ({ username, online }) => {
+      if (username !== currentFriendUsername) return;
+      document.getElementById('dialog-presence').innerHTML = `<strong>Status:</strong> ${escapeHtml(presenceLabel(online, false))}`;
+    });
+
+    socket.on('account_deleted', () => {
+      alert('This account was deleted.');
+      forceLogout();
+    });
+
+  })();
   </script>
 </body>
 </html>

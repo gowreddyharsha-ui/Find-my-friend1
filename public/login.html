@@ -125,18 +125,22 @@
             try {
                 const response = await fetch(API_URL + endpoint, {
                     method: 'POST',
+                    credentials: 'include', // needed to receive/send the HttpOnly auth cookie
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
                 //Verifyresponce is JSON before calling response.json()
                 const contentType = response.headers.get('content-type');
-                if (!contentType||!response.headers.get('content-type')?.includes('application/json')) {
+                if (!contentType || !contentType.includes('application/json')) {
                     throw new Error('Invalid response format');
                 }
                 const data = await response.json();
 
                 if (response.ok) {
                     if (isLoginMode) {
+                        // The server now sets the session as an HttpOnly cookie —
+                        // there's no token in the response body to store anymore,
+                        // and none should be kept in localStorage.
                         localStorage.setItem('mapUsername', data.username);
                         window.location.href = 'map.html';
                     } else {
