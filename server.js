@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -690,7 +691,7 @@ io.on('connection', (socket) => {
 // ---------------------------------------------------------------------------
 // Server startup & DB connection
 // ---------------------------------------------------------------------------
-mongoose.connect(MONGO_URI)
+  mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('Connected to MongoDB');
     server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
